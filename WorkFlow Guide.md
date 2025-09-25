@@ -1,6 +1,6 @@
-# 🎮 Git Workflow Guide for Game Development
+# ENG1 Workflow Guide
 
-This guide outlines the standard workflow for contributing to our GitHub repository.
+This guide outlines the standard workflow for contributing to the GitHub repository.
 ***
 
 ### 1. 🔄 Syncing with the Main Branch
