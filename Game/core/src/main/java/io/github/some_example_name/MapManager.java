@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.badlogic.gdx.math.Vector2;
 
 //Main game class, will manage the camera and will store information about the map
 
@@ -13,6 +14,7 @@ public class MapManager implements Screen {
 
     private Game game;
     private OrthogonalTiledMapRenderer renderer;
+    private Player player;
     // Temporary code so that it will show whichever tilemap is in the file location, will have to move to render once things are moving
     public MapManager(Game game){
         this.game = game;
@@ -23,6 +25,7 @@ public class MapManager implements Screen {
         camera.setToOrtho(false,30,20); // temporary size to test, once developed slightly the user may be able to select the size of the game window in the main menu
         this.renderer.setView(camera);
         this.renderer.render();
+        player = new Player(new Vector2(15, 15));
 
     }
 
@@ -34,6 +37,7 @@ public class MapManager implements Screen {
     @Override
     public void render(float v) {
         this.renderer.render();
+        player.render();
     }
 
     @Override
