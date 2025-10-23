@@ -16,6 +16,8 @@ public class Player {
     public Player(Vector2 position) {
         this.texture = new Texture("Art/Characters/Main Character/Test Character.png");
         this.position = position;
+        position.y = Gdx.graphics.getHeight() - (float) Gdx.graphics.getHeight() / 2;
+        position.x = Gdx.graphics.getWidth() - (float) Gdx.graphics.getWidth() / 2;
         batch = new SpriteBatch();
     }
 
@@ -34,5 +36,9 @@ public class Player {
     }
     public void dispose() {
         batch.dispose();
+    }
+    public void move(int x, int y) {// class to move the player inputs can be -1, 0 or 1
+        position.x += x*speed;
+        position.y += y*speed;
     }
 }

@@ -1,6 +1,8 @@
 package io.github.some_example_name;
 
 import com.badlogic.gdx.Game;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.maps.tiled.TiledMap;
@@ -38,6 +40,7 @@ public class MapManager implements Screen {
     public void render(float v) {
         this.renderer.render();
         player.render();
+        inputHandler();
     }
 
     @Override
@@ -63,5 +66,10 @@ public class MapManager implements Screen {
     @Override
     public void dispose() {
 
+    }
+    public void inputHandler(){// basic template to move the player up
+        if (Gdx.input.isKeyPressed(Input.Keys.W)){
+            player.move(0, 1);
+        }
     }
 }
