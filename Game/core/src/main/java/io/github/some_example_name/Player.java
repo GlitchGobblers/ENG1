@@ -4,41 +4,60 @@ package io.github.some_example_name;
 
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 
 public class Player {
     private Vector2 position;// used to store the location of the player
-    private float speed = 3;// used to set the movement speed of the player
+    private float speed = 3f;// used to set the movement speed of the player
     private Texture texture;
-    private SpriteBatch batch;
+    private Sprite playerSprite;
+    //private SpriteBatch batch;
+    private float width;
+    private float height;
+    //float unitScale=1/16f;
+
     public Player(Vector2 position) {
         this.texture = new Texture("Art/Characters/Main Character/Test Character.png");
+        this.playerSprite = new Sprite(texture); // using sprite gives more control of the texture
         this.position = position;
-        position.y = Gdx.graphics.getHeight() - (float) Gdx.graphics.getHeight() / 2;
-        position.x = Gdx.graphics.getWidth() - (float) Gdx.graphics.getWidth() / 2;
-        batch = new SpriteBatch();
+        //texture size from pixel to world units(1 unit=16 pixel)
+        this.width = (float)texture.getWidth()/16f;
+        this.height = (float)texture.getHeight()/16f;
+        this.playerSprite.setSize(width, height);
+
     }
 
     public void create() {
 
     }
+    public float getWidth() {
+        return width;
+    }
 
-    public Vector2 get_player_position() {
+    public float getHeight() {
+        return height;
+    }
+    public Vector2 getPlayerPosition() {
         return position;
     }
-    public void render() {
-        batch.begin();
-        batch.draw(this.texture, position.x, position.y);
-        batch.end();
-        Gdx.gl.glClearColor(0, 0, 0, 1);
+   public float getSpeed() {
+        return speed;
+   }
+    public void draw(SpriteBatch batch) {
+        // set sprite position to match player's world coordinates
+        playerSprite.setPosition(position.x, position.y);// position.x and position.y are in world units
+        playerSprite.draw(batch);
+
     }
     public void dispose() {
-        batch.dispose();
+
     }
-    public void move(int x, int y) {// class to move the player inputs can be -1, 0 or 1
-        position.x += x*speed;
-        position.y += y*speed;
+    public void move(float x, float y) {// set player new position
+        position.x = x;
+        position.y = y;
     }
+
 }
