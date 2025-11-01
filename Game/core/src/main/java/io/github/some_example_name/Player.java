@@ -46,6 +46,9 @@ public class Player {
    public float getSpeed() {
         return speed;
    }
+   public void setSpeed(float speed){
+        this.speed = speed;
+   }
     public void draw(SpriteBatch batch) {
         // set sprite position to match player's world coordinates
         playerSprite.setPosition(position.x, position.y);// position.x and position.y are in world units
@@ -59,5 +62,7 @@ public class Player {
         position.x = x;
         position.y = y;
     }
-
+    public void setTexture(String texture){
+        this.texture = new Texture(texture);
+    }
 }

@@ -16,6 +16,6 @@ public class Main extends Game {
 
     @Override
     public void create() {
-        setScreen(new MapManager(this));
+        setScreen(new MapManager(this, "maps/Tilesets/Starting Map.tmx"));
     }
 }
