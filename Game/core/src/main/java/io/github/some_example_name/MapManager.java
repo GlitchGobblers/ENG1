@@ -1,10 +1,14 @@
 package io.github.some_example_name;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.maps.MapObjects;
 import com.badlogic.gdx.maps.MapProperties;
@@ -26,10 +30,15 @@ public class MapManager implements Screen {
     private OrthogonalTiledMapRenderer renderer;
     private Player player;
     private OrthographicCamera camera;
+    private OrthographicCamera timerCamera;
     private TiledMapTileLayer roadLayer;
     private SpriteBatch batch;
     private MapObjects Interactables;
     private EventManager EM;
+    private Timer timer;
+    private BitmapFont font;
+    private GlyphLayout layout;
+
     // Temporary code so that it will show whichever tilemap is in the file location, will have to move to render once things are moving
     public MapManager(Game game, String mapFile){
         this.game = game;
@@ -48,17 +57,41 @@ public class MapManager implements Screen {
 
     @Override
     public void show() {
+    timer = new Timer(5);
+    timer.startTimer();
+
+    font = new BitmapFont();
+    font.setColor(1,1,1,1); //colour is white
+    font.getData().setScale(3f);
+
+    layout = new GlyphLayout();
+
+    timerCamera = new OrthographicCamera();
+    timerCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
     }
 
     @Override
     public void render(float v) {
+        Gdx.gl.glClearColor(0, 0, 0, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         this.renderer.setView(camera);
         this.renderer.render();
         batch.setProjectionMatrix(camera.combined);// this ensures that player sprite use the same world units as the map.
         batch.begin();
         player.draw(batch);
         batch.end();
+
+        batch.setProjectionMatrix(timerCamera.combined); // player can see timer
+        batch.begin();
+        String timerText = timer.displayTimer();
+        layout.setText(font, timerText);
+        // appears in top right corner
+        float x = Gdx.graphics.getWidth() - layout.width - 20;
+        float y = Gdx.graphics.getHeight() - 20;
+        font.draw(batch, timerText, x, y);
+        batch.end();
+
         inputHandler();
 
     }
