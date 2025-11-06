@@ -7,6 +7,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.maps.MapObject;
@@ -38,36 +39,38 @@ public class MapManager implements Screen {
     private Timer timer;
     private BitmapFont font;
     private GlyphLayout layout;
+    private Texture interact;
 
     // Temporary code so that it will show whichever tilemap is in the file location, will have to move to render once things are moving
-    public MapManager(Game game, String mapFile){
+    public MapManager(Game game, String mapFile) {
         this.game = game;
         TiledMap map = new TmxMapLoader().load(mapFile);// this file is a temporary one to see if the renderer is working, its not our final one
-        this.roadLayer=(TiledMapTileLayer) map.getLayers().get("Road"); // out of all layers this is safe layer which the player can move on it.
+        this.roadLayer = (TiledMapTileLayer) map.getLayers().get("Road"); // out of all layers this is safe layer which the player can move on it.
         Interactables = map.getLayers().get("Interactables").getObjects();//Gets all the interactables on the object layer
         EM = new EventManager(Interactables);// Creates a Event manager which handles getting information about the events on the map
-        float unitScale = 1/16f;// 1 world unit ==16pixels
+        float unitScale = 1 / 16f;// 1 world unit ==16pixels
         this.renderer = new OrthogonalTiledMapRenderer(map, unitScale);
         this.camera = new OrthographicCamera();
-        camera.setToOrtho(false,60,40); // temporary size to test, once developed slightly the user may be able to select the size of the game window in the main menu
+        camera.setToOrtho(false, 60, 40); // temporary size to test, once developed slightly the user may be able to select the size of the game window in the main menu
         this.renderer.setView(camera);
         this.batch = new SpriteBatch();
-        player = new Player(new Vector2(13,36));
+        player = new Player(new Vector2(11, 4));
+        interact =  new Texture("Art/Interact.png");
     }
 
     @Override
     public void show() {
-    timer = new Timer(5);
-    timer.startTimer();
+        timer = new Timer(5);
+        timer.startTimer();
 
-    font = new BitmapFont();
-    font.setColor(1,1,1,1); //colour is white
-    font.getData().setScale(3f);
+        font = new BitmapFont();
+        font.setColor(1, 1, 1, 1); //colour is white
+        font.getData().setScale(3f);
 
-    layout = new GlyphLayout();
+        layout = new GlyphLayout();
 
-    timerCamera = new OrthographicCamera();
-    timerCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        timerCamera = new OrthographicCamera();
+        timerCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
     }
 
@@ -120,7 +123,8 @@ public class MapManager implements Screen {
     public void dispose() {
 
     }
-    public boolean isTileSafe(float x, float y){
+
+    public boolean isTileSafe(float x, float y) {
         float playerWidth = player.getWidth();
         float playerHeight = player.getHeight();
         float epsilon = 0.01f; // Prevents snagging on exact tile edges
@@ -134,8 +138,9 @@ public class MapManager implements Screen {
         // Safe only if ALL corners are on a road tile
         return bottomLeft && bottomRight && topLeft && topRight;
     }
-    public boolean IsAreaSafe(float x,float y) { // checks whether the tile at the given position is safe to move onto.
-        int col = (int) floor( x);
+
+    public boolean IsAreaSafe(float x, float y) { // checks whether the tile at the given position is safe to move onto.
+        int col = (int) floor(x);
         int row = (int) floor(y);
 
         if (roadLayer == null || col < 0 || row < 0 || col >= roadLayer.getWidth() || row >= roadLayer.getHeight()) {
@@ -147,7 +152,28 @@ public class MapManager implements Screen {
         //the getcell() will returns null if there is no tile on the roadlayer at this position
     }
 
-    public void inputHandler(){
+    public void objectCheck(Vector2 CurrentPosition) {
+        for (int i = 0; i < Interactables.getCount(); i++) {
+            MapObject Object = Interactables.get(i);
+            MapProperties ObjectProperties = Object.getProperties();
+            Vector2 ObjectPosition = new Vector2((Float) ObjectProperties.get("x") / 16, (Float) ObjectProperties.get("y") / 16);
+            Vector2 ObjectSize = new Vector2((float) ObjectProperties.get("width") / 16, (float) ObjectProperties.get("height") / 16);
+            if (CurrentPosition.x >= (ObjectPosition.x) && CurrentPosition.x <= ((ObjectPosition.x + ObjectSize.x)) && // Checks if the player is inside the object area
+                CurrentPosition.y >= (ObjectPosition.y) && CurrentPosition.y <= ((ObjectPosition.y + ObjectSize.y))) {
+                batch.begin();
+                batch.draw(interact, CurrentPosition.x*20, (CurrentPosition.y+2 )*20);
+                batch.end();
+                if (Gdx.input.isKeyPressed(Input.Keys.E)) {
+                    String change = EM.event(i);
+                    if (Float.parseFloat(change) <= 10) {
+                        player.setSpeed((float) Integer.parseInt(change));
+                    }
+                }
+            }
+        }
+    }
+
+    public void inputHandler() {
         float delta = Gdx.graphics.getDeltaTime();
         float speed = player.getSpeed();
 
@@ -157,13 +183,17 @@ public class MapManager implements Screen {
 
         // Calculate the New movements based on input
         if (Gdx.input.isKeyPressed(Input.Keys.D)) {
-            NewPositionX += speed * delta; }
+            NewPositionX += speed * delta;
+        }
         if (Gdx.input.isKeyPressed(Input.Keys.A)) {
-            NewPositionX -= speed * delta; }
+            NewPositionX -= speed * delta;
+        }
         if (Gdx.input.isKeyPressed(Input.Keys.W)) {
-            NewPositionY += speed * delta; }
+            NewPositionY += speed * delta;
+        }
         if (Gdx.input.isKeyPressed(Input.Keys.S)) {
-            NewPositionY -= speed * delta; }
+            NewPositionY -= speed * delta;
+        }
 
         // collisions check by Separating axes
         // check x-axes
@@ -177,22 +207,6 @@ public class MapManager implements Screen {
         if (isTileSafe(CurrentPosition.x, NewPositionY)) {
             player.move(CurrentPosition.x, NewPositionY);
         }
-        //object handling
-        for (int i = 0; i<Interactables.getCount(); i++){
-            MapObject Object = Interactables.get(i);
-            MapProperties ObjectProperties = Object.getProperties();
-            Vector2 ObjectPosition = new Vector2((Float) ObjectProperties.get("x")/16, (Float)ObjectProperties.get("y")/16);
-            Vector2 ObjectSize = new Vector2((float)ObjectProperties.get("width")/16, (float) ObjectProperties.get("height")/16);
-            if (CurrentPosition.x >= (ObjectPosition.x) && CurrentPosition.x <= ((ObjectPosition.x + ObjectSize.x)) && // Checks if the player is inside the object area
-                CurrentPosition.y >= (ObjectPosition.y) && CurrentPosition.y <= ((ObjectPosition.y + ObjectSize.y))){
-                if (Gdx.input.isKeyPressed(Input.Keys.E)){
-                    String change = EM.event(i);
-                    if (Float.parseFloat(change) <= 10){
-                        player.setSpeed((float)Integer.parseInt(change));
-                    }
-                }
-            }
-        }
+        objectCheck(CurrentPosition);
     }
-
 }
