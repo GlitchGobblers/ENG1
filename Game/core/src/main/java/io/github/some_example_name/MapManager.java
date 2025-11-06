@@ -35,6 +35,7 @@ import jdk.internal.org.jline.terminal.impl.LineDisciplineTerminal;
 
 public class MapManager implements Screen {
     private Game game;
+    private String mapFilePath;
     private OrthogonalTiledMapRenderer renderer;
     private Player player;
     private OrthographicCamera camera;
@@ -49,13 +50,16 @@ public class MapManager implements Screen {
 
 	// Pause state/UI
 	private boolean paused = false;
+    private boolean gameOver = false;
 	private Stage uiStage;
 	private Skin uiSkin;
 	private Table pauseTable;
+    private Table endTable;
 
     // Temporary code so that it will show whichever tilemap is in the file location, will have to move to render once things are moving
     public MapManager(Game game, String mapFile){
         this.game = game;
+        this.mapFilePath = mapFile;
         TiledMap map = new TmxMapLoader().load(mapFile);// this file is a temporary one to see if the renderer is working, its not our final one
         this.roadLayer=(TiledMapTileLayer) map.getLayers().get("Road"); // out of all layers this is safe layer which the player can move on it.
         Interactables = map.getLayers().get("Interactables").getObjects();//Gets all the interactables on the object layer
@@ -89,6 +93,7 @@ public class MapManager implements Screen {
 		uiStage = new Stage(new ScreenViewport());
 		uiSkin = new Skin(Gdx.files.internal("ui/uiskin.json"));
 		buildPauseUI();
+        buildEndUI();
     }
 
 	private void buildPauseUI() {
@@ -133,6 +138,50 @@ public class MapManager implements Screen {
 		});
 	}
 
+    private void buildEndUI() {
+        endTable = new Table(uiSkin);
+        endTable.setFillParent(true);
+        endTable.defaults().pad(10);
+        uiStage.addActor(endTable);
+
+        Label failTitle = new Label("You ran out of time and failed to escape university!", uiSkin);
+        failTitle.setFontScale(3.6f);
+        failTitle.setAlignment(Align.center);
+        failTitle.setColor(new Color(0.7f, 0f, 0f, 1f));
+
+        TextButton restartBtn = new TextButton("Restart", uiSkin);
+        restartBtn.getLabel().setFontScale(3.0f);
+        TextButton quitBtn = new TextButton("Quit", uiSkin);
+        quitBtn.getLabel().setFontScale(3.0f);
+
+        Table window = new Table(uiSkin);
+        window.defaults().pad(20).minWidth(200).minHeight(60);
+        window.add(failTitle).center().padBottom(40).row();
+        window.add(restartBtn).fillX().minHeight(80).row();
+        window.add(quitBtn).fillX().minHeight(80);
+
+        endTable.add().expand().row();
+        endTable.add(window).center();
+        endTable.row();
+        endTable.add().expand();
+
+        endTable.setVisible(false);
+
+        restartBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
+            @Override
+            public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
+                game.setScreen(new MapManager(game, mapFilePath));
+            }
+        });
+
+        quitBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
+            @Override
+            public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
+                Gdx.app.exit();
+            }
+        });
+    }
+
 	private void togglePause() {
 		paused = !paused;
 		if (paused) {
@@ -153,13 +202,13 @@ public class MapManager implements Screen {
         this.renderer.setView(camera);
         this.renderer.render();
 
-		// Toggle pause on ESC
-		if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+		// Toggle pause on ESC (disabled during game over)
+		if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) && !gameOver) {
 			togglePause();
 		}
 
-		// Only process gameplay when not paused
-		if (!paused) {
+		// Only process gameplay when not paused or game over
+		if (!paused && !gameOver) {
 			inputHandler();
 			player.update(Gdx.graphics.getDeltaTime());
 		}
@@ -178,8 +227,17 @@ public class MapManager implements Screen {
 		font.draw(batch, timerText, x, y);
         batch.end();
 
-		// Draw pause UI on top if paused
-		if (paused) {
+        // Trigger game over when timer hits zero
+        if (!gameOver && timer.getSeconds() <= 0) {
+            gameOver = true;
+            if (pauseTable != null) pauseTable.setVisible(false);
+            if (endTable != null) endTable.setVisible(true);
+            if (timer != null && timer.getRunning()) timer.pauseTimer();
+            Gdx.input.setInputProcessor(uiStage);
+        }
+
+		// Draw UI overlays
+		if (paused || gameOver) {
 			uiStage.act();
 			uiStage.draw();
 		}
