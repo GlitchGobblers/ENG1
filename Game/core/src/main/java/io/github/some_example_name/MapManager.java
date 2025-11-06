@@ -1,5 +1,6 @@
 package io.github.some_example_name;
 
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
@@ -9,6 +10,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.maps.MapObjects;
 import com.badlogic.gdx.maps.MapProperties;
@@ -25,7 +27,6 @@ import jdk.internal.org.jline.terminal.impl.LineDisciplineTerminal;
 //Main game class, will manage the camera and will store information about the map
 
 public class MapManager implements Screen {
-
     private Game game;
     private OrthogonalTiledMapRenderer renderer;
     private Player player;
@@ -36,7 +37,7 @@ public class MapManager implements Screen {
     private MapObjects Interactables;
     private EventManager EM;
     private Timer timer;
-    private BitmapFont font;
+    private final BitmapFont font;
     private GlyphLayout layout;
 
     // Temporary code so that it will show whichever tilemap is in the file location, will have to move to render once things are moving
@@ -53,22 +54,23 @@ public class MapManager implements Screen {
         this.renderer.setView(camera);
         this.batch = new SpriteBatch();
         player = new Player(new Vector2(13,36));
+
+        FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("ui/arial.ttf"));
+        FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
+        parameter.size = 48; // font size 12 pixels
+        this.font = generator.generateFont(parameter);
+        generator.dispose(); // don't forget to dispose to avoid memory leaks!
     }
 
     @Override
     public void show() {
-    timer = new Timer(5);
-    timer.startTimer();
+        timer = new Timer(5);
+        timer.startTimer();
 
-    font = new BitmapFont();
-    font.setColor(1,1,1,1); //colour is white
-    font.getData().setScale(3f);
+        layout = new GlyphLayout();
 
-    layout = new GlyphLayout();
-
-    timerCamera = new OrthographicCamera();
-    timerCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-
+        timerCamera = new OrthographicCamera();
+        timerCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
 
     @Override
