@@ -12,10 +12,8 @@ public class Player {
     //private SpriteBatch batch;
     private final float width;
     private final float height;
-    // texture size from pixel to world units(1 unit=16 pixel)
-    float unitScale=1/16f;
 
-    public Player(Vector2 position) {
+    public Player(Vector2 position, float unitScale) {
         Texture texture = new Texture("Art/Characters/Main Character/Test Character.png");
         // using sprite gives more control of the texture
         this.playerSprite = new Sprite(texture);
