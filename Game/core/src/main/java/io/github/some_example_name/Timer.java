@@ -23,8 +23,14 @@ public class Timer {
         startTimer();
     }
     public void stopTimer() {
-        // use this for pause menu
+        // Stop without preserving remaining time (legacy behavior)
         running = false;
+    }
+
+    public void pauseTimer() {
+        // Preserve remaining time so resume continues from where it left off
+        this.seconds = getSeconds();
+        this.running = false;
     }
 
     public Boolean getRunning() {

@@ -22,6 +22,13 @@ import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 
 import static java.lang.Math.floor;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.Align;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import jdk.internal.org.jline.terminal.impl.LineDisciplineTerminal;
 
 //Main game class, will manage the camera and will store information about the map
@@ -39,6 +46,12 @@ public class MapManager implements Screen {
     private Timer timer;
     private final BitmapFont font;
     private GlyphLayout layout;
+
+	// Pause state/UI
+	private boolean paused = false;
+	private Stage uiStage;
+	private Skin uiSkin;
+	private Table pauseTable;
 
     // Temporary code so that it will show whichever tilemap is in the file location, will have to move to render once things are moving
     public MapManager(Game game, String mapFile){
@@ -71,14 +84,82 @@ public class MapManager implements Screen {
 
         timerCamera = new OrthographicCamera();
         timerCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
+		// UI for pause menu
+		uiStage = new Stage(new ScreenViewport());
+		uiSkin = new Skin(Gdx.files.internal("ui/uiskin.json"));
+		buildPauseUI();
     }
 
+	private void buildPauseUI() {
+		pauseTable = new Table(uiSkin);
+		pauseTable.setFillParent(true);
+		pauseTable.defaults().pad(10);
+		uiStage.addActor(pauseTable);
+
+		Label title = new Label("Pause", uiSkin, "title");
+		title.setAlignment(Align.center);
+		TextButton resumeBtn = new TextButton("Resume", uiSkin);
+		TextButton quitBtn = new TextButton("Quit", uiSkin);
+
+		Table window = new Table(uiSkin);
+		window.defaults().pad(10);
+		window.add(title).center().padBottom(20).row();
+		window.add(resumeBtn).fillX().row();
+		window.add(quitBtn).fillX();
+
+		pauseTable.add().expand().row();
+		pauseTable.add(window).center();
+		pauseTable.row();
+		pauseTable.add().expand();
+
+		pauseTable.setVisible(false);
+
+		resumeBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
+			@Override
+			public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
+				togglePause();
+			}
+		});
+
+		quitBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
+			@Override
+			public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
+				game.setScreen(new MainMenuScreen());
+			}
+		});
+	}
+
+	private void togglePause() {
+		paused = !paused;
+		if (paused) {
+			if (timer != null) timer.pauseTimer();
+			if (pauseTable != null) pauseTable.setVisible(true);
+			Gdx.input.setInputProcessor(uiStage);
+		} else {
+			if (timer != null) timer.startTimer();
+			if (pauseTable != null) pauseTable.setVisible(false);
+			Gdx.input.setInputProcessor(null);
+		}
+	}
+
     @Override
-    public void render(float v) {
+	public void render(float v) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         this.renderer.setView(camera);
         this.renderer.render();
+
+		// Toggle pause on ESC
+		if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+			togglePause();
+		}
+
+		// Only process gameplay when not paused
+		if (!paused) {
+			inputHandler();
+			player.update(Gdx.graphics.getDeltaTime());
+		}
         batch.setProjectionMatrix(camera.combined);// this ensures that player sprite use the same world units as the map.
         batch.begin();
         player.draw(batch);
@@ -91,11 +172,14 @@ public class MapManager implements Screen {
         // appears in top right corner
         float x = Gdx.graphics.getWidth() - layout.width - 20;
         float y = Gdx.graphics.getHeight() - 20;
-        font.draw(batch, timerText, x, y);
+		font.draw(batch, timerText, x, y);
         batch.end();
 
-        inputHandler();
-
+		// Draw pause UI on top if paused
+		if (paused) {
+			uiStage.act();
+			uiStage.draw();
+		}
     }
 
     @Override
@@ -120,7 +204,7 @@ public class MapManager implements Screen {
 
     @Override
     public void dispose() {
-
+		if (uiStage != null) uiStage.dispose();
     }
     public boolean isTileSafe(float x, float y){
         float playerWidth = player.getWidth();
@@ -158,14 +242,15 @@ public class MapManager implements Screen {
         float NewPositionY = CurrentPosition.y;
 
         // Calculate the New movements based on input
-        if (Gdx.input.isKeyPressed(Input.Keys.D)) {
-            NewPositionX += speed * delta; }
-        if (Gdx.input.isKeyPressed(Input.Keys.A)) {
-            NewPositionX -= speed * delta; }
-        if (Gdx.input.isKeyPressed(Input.Keys.W)) {
-            NewPositionY += speed * delta; }
-        if (Gdx.input.isKeyPressed(Input.Keys.S)) {
-            NewPositionY -= speed * delta; }
+        boolean right = Gdx.input.isKeyPressed(Input.Keys.D);
+        boolean left = Gdx.input.isKeyPressed(Input.Keys.A);
+        boolean up = Gdx.input.isKeyPressed(Input.Keys.W);
+        boolean down = Gdx.input.isKeyPressed(Input.Keys.S);
+
+        if (right) { NewPositionX += speed * delta; }
+        if (left) { NewPositionX -= speed * delta; }
+        if (up) { NewPositionY += speed * delta; }
+        if (down) { NewPositionY -= speed * delta; }
 
         // collisions check by Separating axes
         // check x-axes
@@ -179,6 +264,15 @@ public class MapManager implements Screen {
         if (isTileSafe(CurrentPosition.x, NewPositionY)) {
             player.move(CurrentPosition.x, NewPositionY);
         }
+        // Update player animation state based on input
+        boolean moving = right || left || up || down;
+        Player.Direction dir = null;
+        if (right) dir = Player.Direction.RIGHT;
+        else if (left) dir = Player.Direction.LEFT;
+        else if (up) dir = Player.Direction.UP;
+        else if (down) dir = Player.Direction.DOWN;
+        player.setAnimationState(moving, dir);
+
         //object handling
         for (int i = 0; i<Interactables.getCount(); i++){
             MapObject Object = Interactables.get(i);
