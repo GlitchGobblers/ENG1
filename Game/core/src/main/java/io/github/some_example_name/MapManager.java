@@ -1,6 +1,5 @@
 package io.github.some_example_name;
 
-import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
@@ -29,7 +28,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import jdk.internal.org.jline.terminal.impl.LineDisciplineTerminal;
 
 //Main game class, will manage the camera and will store information about the map
 
@@ -41,6 +39,7 @@ public class MapManager implements Screen {
     private OrthographicCamera camera;
     private OrthographicCamera timerCamera;
     private TiledMapTileLayer roadLayer;
+    private TiledMapTileLayer winLayer;
     private SpriteBatch batch;
     private MapObjects Interactables;
     private EventManager EM;
@@ -55,6 +54,7 @@ public class MapManager implements Screen {
 	private Skin uiSkin;
 	private Table pauseTable;
     private Table endTable;
+    private Table passTable;
 
     // Temporary code so that it will show whichever tilemap is in the file location, will have to move to render once things are moving
     public MapManager(Game game, String mapFile){
@@ -62,6 +62,7 @@ public class MapManager implements Screen {
         this.mapFilePath = mapFile;
         TiledMap map = new TmxMapLoader().load(mapFile);// this file is a temporary one to see if the renderer is working, its not our final one
         this.roadLayer=(TiledMapTileLayer) map.getLayers().get("Road"); // out of all layers this is safe layer which the player can move on it.
+        this.winLayer=(TiledMapTileLayer) map.getLayers().get("WinCondition"); // This layer is the layer at which the game is won and ends
         Interactables = map.getLayers().get("Interactables").getObjects();//Gets all the interactables on the object layer
         EM = new EventManager(Interactables);// Creates a Event manager which handles getting information about the events on the map
         float unitScale = 1/16f;// 1 world unit ==16pixels
@@ -81,7 +82,7 @@ public class MapManager implements Screen {
 
     @Override
     public void show() {
-        timer = new Timer(5);
+        timer = new Timer(1);
         timer.startTimer();
 
         layout = new GlyphLayout();
@@ -93,7 +94,8 @@ public class MapManager implements Screen {
 		uiStage = new Stage(new ScreenViewport());
 		uiSkin = new Skin(Gdx.files.internal("ui/uiskin.json"));
 		buildPauseUI();
-        buildEndUI();
+        buildFailGUI();
+        buildPassUI();
     }
 
 	private void buildPauseUI() {
@@ -138,16 +140,16 @@ public class MapManager implements Screen {
 		});
 	}
 
-    private void buildEndUI() {
+    private void buildFailGUI() {
         endTable = new Table(uiSkin);
         endTable.setFillParent(true);
         endTable.defaults().pad(10);
         uiStage.addActor(endTable);
 
-        Label failTitle = new Label("You ran out of time and failed to escape university!", uiSkin);
-        failTitle.setFontScale(3.6f);
-        failTitle.setAlignment(Align.center);
-        failTitle.setColor(new Color(0.7f, 0f, 0f, 1f));
+        Label passTitle = new Label("You ran out of time and failed to escape university!", uiSkin);
+        passTitle.setFontScale(3.6f);
+        passTitle.setAlignment(Align.center);
+        passTitle.setColor(new Color(0.7f, 0f, 0f, 1f));
 
         TextButton restartBtn = new TextButton("Restart", uiSkin);
         restartBtn.getLabel().setFontScale(3.0f);
@@ -156,7 +158,7 @@ public class MapManager implements Screen {
 
         Table window = new Table(uiSkin);
         window.defaults().pad(20).minWidth(200).minHeight(60);
-        window.add(failTitle).center().padBottom(40).row();
+        window.add(passTitle).center().padBottom(40).row();
         window.add(restartBtn).fillX().minHeight(80).row();
         window.add(quitBtn).fillX().minHeight(80);
 
@@ -166,6 +168,50 @@ public class MapManager implements Screen {
         endTable.add().expand();
 
         endTable.setVisible(false);
+
+        restartBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
+            @Override
+            public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
+                game.setScreen(new MapManager(game, mapFilePath));
+            }
+        });
+
+        quitBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
+            @Override
+            public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
+                Gdx.app.exit();
+            }
+        });
+    }
+
+    private void buildPassUI() {
+        passTable = new Table(uiSkin);
+        passTable.setFillParent(true);
+        passTable.defaults().pad(10);
+        uiStage.addActor(passTable);
+
+        Label passTitle = new Label("You solved the puzzles and ESCAPED THE UNI!", uiSkin);
+        passTitle.setFontScale(3.6f);
+        passTitle.setAlignment(Align.center);
+        passTitle.setColor(new Color(1f, 0.84f, 0f, 1f));
+
+        TextButton restartBtn = new TextButton("Play Again", uiSkin);
+        restartBtn.getLabel().setFontScale(3.0f);
+        TextButton quitBtn = new TextButton("Quit", uiSkin);
+        quitBtn.getLabel().setFontScale(3.0f);
+
+        Table window = new Table(uiSkin);
+        window.defaults().pad(20).minWidth(200).minHeight(60);
+        window.add(passTitle).center().padBottom(40).row();
+        window.add(restartBtn).fillX().minHeight(80).row();
+        window.add(quitBtn).fillX().minHeight(80);
+
+        passTable.add().expand().row();
+        passTable.add(window).center();
+        passTable.row();
+        passTable.add().expand();
+
+        passTable.setVisible(false);
 
         restartBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
             @Override
@@ -287,6 +333,23 @@ public class MapManager implements Screen {
         // Safe only if ALL corners are on a road tile
         return bottomLeft && bottomRight && topLeft && topRight;
     }
+
+    private boolean playerOnWinTile(float x, float y) {
+        float w = player.getWidth();
+        float h = player.getHeight();
+        float eps = 0.01f;
+
+        boolean bl = IsVictoryArea(x, y);
+        boolean br = IsVictoryArea(x + w - eps, y);
+        boolean tl = IsVictoryArea(x, y + h - eps);
+        boolean tr = IsVictoryArea(x + w - eps, y + h - eps);
+
+        return bl || br || tl || tr;
+    }
+
+
+
+
     public boolean IsAreaSafe(float x,float y) { // checks whether the tile at the given position is safe to move onto.
         int col = (int) floor( x);
         int row = (int) floor(y);
@@ -299,6 +362,19 @@ public class MapManager implements Screen {
         return cell != null && cell.getTile() != null;
         //the getcell() will returns null if there is no tile on the roadlayer at this position
     }
+
+    public boolean IsVictoryArea(float x, float y) {
+        int col = (int) floor(x);
+        int row = (int) floor(y);
+
+        if (col < 0 || row < 0 || col >= winLayer.getWidth() || row >= winLayer.getHeight()) {
+            return false;
+        }
+
+        TiledMapTileLayer.Cell cell = winLayer.getCell(col, row);
+        return cell != null && cell.getTile() != null;
+    }
+
 
     public void inputHandler(){
         float delta = Gdx.graphics.getDeltaTime();
@@ -319,6 +395,16 @@ public class MapManager implements Screen {
         if (up) { NewPositionY += speed * delta; }
         if (down) { NewPositionY -= speed * delta; }
 
+        Vector2 p = player.getPlayerPosition();
+        if (playerOnWinTile(p.x, p.y)) {
+            gameOver = true;
+            if (pauseTable != null) pauseTable.setVisible(false);
+            if (endTable != null) endTable.setVisible(false);   // hide fail table if it exists
+            if (passTable != null) passTable.setVisible(true);  // SHOW the pass table
+            if (timer != null && timer.getRunning()) timer.pauseTimer();
+            Gdx.input.setInputProcessor(uiStage);
+        }
+
         // collisions check by Separating axes
         // check x-axes
         if (isTileSafe(NewPositionX, CurrentPosition.y)) {
@@ -326,6 +412,7 @@ public class MapManager implements Screen {
         } else {
             NewPositionX = CurrentPosition.x; // use current x if move failed
         }
+
 
         //check y-axes
         if (isTileSafe(CurrentPosition.x, NewPositionY)) {
