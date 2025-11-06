@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.ScreenUtils;
 
+
 // Use to load and start the game music and ui assets
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */

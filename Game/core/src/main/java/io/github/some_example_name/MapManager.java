@@ -49,10 +49,10 @@ public class MapManager implements Screen {
         float unitScale = 1/16f;// 1 world unit ==16pixels
         this.renderer = new OrthogonalTiledMapRenderer(map, unitScale);
         this.camera = new OrthographicCamera();
-        camera.setToOrtho(false,30,20); // temporary size to test, once developed slightly the user may be able to select the size of the game window in the main menu
+        camera.setToOrtho(false,60,40); // temporary size to test, once developed slightly the user may be able to select the size of the game window in the main menu
         this.renderer.setView(camera);
         this.batch = new SpriteBatch();
-        player = new Player(new Vector2(12,15));
+        player = new Player(new Vector2(13,36));
     }
 
     @Override
