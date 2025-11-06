@@ -27,7 +27,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.utils.Align;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import jdk.internal.org.jline.terminal.impl.LineDisciplineTerminal;
 
@@ -97,16 +97,19 @@ public class MapManager implements Screen {
 		pauseTable.defaults().pad(10);
 		uiStage.addActor(pauseTable);
 
-		Label title = new Label("Pause", uiSkin, "title");
+		Label title = new Label("Pause", uiSkin);
+		title.setFontScale(3.6f); // 3x larger (was 1.2f)
 		title.setAlignment(Align.center);
 		TextButton resumeBtn = new TextButton("Resume", uiSkin);
+		resumeBtn.getLabel().setFontScale(3.0f); // 3x larger
 		TextButton quitBtn = new TextButton("Quit", uiSkin);
+		quitBtn.getLabel().setFontScale(3.0f); // 3x larger
 
 		Table window = new Table(uiSkin);
-		window.defaults().pad(10);
-		window.add(title).center().padBottom(20).row();
-		window.add(resumeBtn).fillX().row();
-		window.add(quitBtn).fillX();
+		window.defaults().pad(20).minWidth(200).minHeight(60); // Larger padding and min sizes for buttons
+		window.add(title).center().padBottom(40).row();
+		window.add(resumeBtn).fillX().minHeight(80).row();
+		window.add(quitBtn).fillX().minHeight(80);
 
 		pauseTable.add().expand().row();
 		pauseTable.add(window).center();
@@ -125,7 +128,7 @@ public class MapManager implements Screen {
 		quitBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
 			@Override
 			public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
-				game.setScreen(new MainMenuScreen());
+				Gdx.app.exit(); // Properly exit the application
 			}
 		});
 	}
@@ -184,7 +187,12 @@ public class MapManager implements Screen {
 
     @Override
     public void resize(int i, int i1) {
-
+		if (uiStage != null) {
+			uiStage.getViewport().update(i, i1, true);
+		}
+		if (timerCamera != null) {
+			timerCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		}
     }
 
     @Override
@@ -205,6 +213,7 @@ public class MapManager implements Screen {
     @Override
     public void dispose() {
 		if (uiStage != null) uiStage.dispose();
+		if (uiSkin != null) uiSkin.dispose();
     }
     public boolean isTileSafe(float x, float y){
         float playerWidth = player.getWidth();
