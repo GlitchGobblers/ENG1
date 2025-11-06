@@ -8,11 +8,6 @@ public class Timer {
     private Boolean running;
     private long start;
 
-
-
-
-
-
     public Timer (int minutes) {
         this.seconds = minutes * 60;
         this.running = false;
@@ -24,7 +19,7 @@ public class Timer {
     }
 
     public void restartTimer(int minutes) {
-        this.seconds = minutes*60;
+        this.seconds = minutes * 60;
         startTimer();
     }
     public void stopTimer() {
@@ -45,16 +40,15 @@ public class Timer {
         return currentseconds;
     }
 
-    public String displayTimer()
-    {
+    public String displayTimer() {
         int currentSeconds = getSeconds();
         if (currentSeconds < 0) {
             currentSeconds = 0;
         }
-        int minutes = currentSeconds/60;
-        int secs = currentSeconds%60;
+        int minutes = currentSeconds / 60;
+        int secs = currentSeconds % 60;
 
-        String time = String.format ("%d:%02d",minutes,secs);
+        String time = String.format("%d:%02d",minutes,secs);
         return time;
     }
 }
