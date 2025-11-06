@@ -8,16 +8,15 @@ import com.badlogic.gdx.math.Vector2;
 public class Player {
     private Vector2 position;// used to store the location of the player
     private float speed = 3f;// used to set the movement speed of the player
-    private Texture texture;
-    private Sprite playerSprite;
+    private final Sprite playerSprite;
     //private SpriteBatch batch;
-    private float width;
-    private float height;
+    private final float width;
+    private final float height;
     // texture size from pixel to world units(1 unit=16 pixel)
     float unitScale=1/16f;
 
     public Player(Vector2 position) {
-        this.texture = new Texture("Art/Characters/Main Character/Test Character.png");
+        Texture texture = new Texture("Art/Characters/Main Character/Test Character.png");
         // using sprite gives more control of the texture
         this.playerSprite = new Sprite(texture);
 
