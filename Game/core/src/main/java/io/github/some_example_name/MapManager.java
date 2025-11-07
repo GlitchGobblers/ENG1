@@ -37,14 +37,6 @@ import com.badlogic.gdx.math.Rectangle;
 //Main game class, will manage the camera and will store information about the map
 
 public class MapManager implements Screen {
-    private Texture barrierTexture; //the barrier texture
-    private Rectangle barrierRect;
-    private boolean isBarrierActive = true;
-    private Texture keyTexture; // the key barrier texture
-    private Rectangle keyRect;
-    private boolean iskeyActive = true;
-    private int eventCount = 0; //variable to keep counts how many times the key is collected
-
     private Game game;
     private String mapFilePath;
     private OrthogonalTiledMapRenderer renderer;
@@ -68,6 +60,14 @@ public class MapManager implements Screen {
 	private Table pauseTable;
     private Table endTable;
     private Table passTable;
+    
+    private Texture barrierTexture; //the barrier texture
+    private Rectangle barrierRect;
+    private boolean isBarrierActive = true;
+    private Texture keyTexture; // the key barrier texture
+    private Rectangle keyRect;
+    private boolean iskeyActive = true;
+    private int eventCount = 0; //variable to keep counts how many times the key is collected
 
     // Temporary code so that it will show whichever tilemap is in the file location, will have to move to render once things are moving
     public MapManager(Game game, String mapFile){
