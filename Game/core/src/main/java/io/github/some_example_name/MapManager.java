@@ -29,9 +29,22 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.math.Rectangle;
+
+
 //Main game class, will manage the camera and will store information about the map
 
 public class MapManager implements Screen {
+    private Texture barrierTexture; //the barrier texture
+    private Rectangle barrierRect;
+    private boolean isBarrierActive = true;
+    private Texture keyTexture; // the key barrier texture
+    private Rectangle keyRect;
+    private boolean iskeyActive = true;
+    private int eventCount = 0; //variable to keep counts how many times the key is collected
+
     private Game game;
     private String mapFilePath;
     private OrthogonalTiledMapRenderer renderer;
@@ -72,6 +85,10 @@ public class MapManager implements Screen {
         this.renderer.setView(camera);
         this.batch = new SpriteBatch();
         player = new Player(new Vector2(13,36));
+        barrierTexture = new Texture("Art/Props/Crate_Medium_Closed.png");
+        keyTexture = new Texture("Art/Characters/Main Character/Test Character2.png");
+        barrierRect = new Rectangle(37, 21, 2, 2); // place the barrier on the map.
+        keyRect = new Rectangle(10, 3, 2, 2); // place the key for the barrier on the map
 
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("ui/arial.ttf"));
         FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
@@ -261,6 +278,12 @@ public class MapManager implements Screen {
         batch.setProjectionMatrix(camera.combined);// this ensures that player sprite use the same world units as the map.
         batch.begin();
         player.draw(batch);
+        if (isBarrierActive && barrierRect != null && barrierTexture != null) { //draw the barrier only when the active states is true and it's not null
+            batch.draw(barrierTexture, barrierRect.x, barrierRect.y, barrierRect.width, barrierRect.height);
+        }
+        if (iskeyActive && keyTexture != null) {// draw the key that will help the player to pass the barrier
+            batch.draw(keyTexture, keyRect.x, keyRect.y, keyRect.width, keyRect.height);
+        }
         batch.end();
 
         batch.setProjectionMatrix(timerCamera.combined); // player can see timer
@@ -329,9 +352,18 @@ public class MapManager implements Screen {
         boolean bottomRight = IsAreaSafe(x + playerWidth - epsilon, y);
         boolean topLeft = IsAreaSafe(x, y + playerHeight - epsilon);
         boolean topRight = IsAreaSafe(x + playerWidth - epsilon, y + playerHeight - epsilon);
+        //Safe only if ALL corners are on a road tile
 
-        // Safe only if ALL corners are on a road tile
-        return bottomLeft && bottomRight && topLeft && topRight;
+
+        if (!(bottomLeft && bottomRight && topLeft && topRight)) return false;
+
+        // player must not overlaps the barrier if it's active
+        if (isBarrierActive && barrierRect != null) {
+            Rectangle playerRect = new Rectangle(x, y, playerWidth, playerHeight);
+            if (playerRect.overlaps(barrierRect)) return false;
+        }
+
+        return true;
     }
 
     private boolean playerOnWinTile(float x, float y) {
@@ -426,6 +458,14 @@ public class MapManager implements Screen {
         else if (up) dir = Player.Direction.UP;
         else if (down) dir = Player.Direction.DOWN;
         player.setAnimationState(moving, dir);
+        Rectangle playerRect = new Rectangle(CurrentPosition.x, CurrentPosition.y, player.getWidth(), player.getHeight());
+
+        if (iskeyActive && playerRect.overlaps(keyRect)) { //this will if statment will check if the player touches the key if yes it'll remove the barrier
+            iskeyActive = false;
+            isBarrierActive = false;
+            eventCount++;
+            System.out.println("the key is been collected"+ eventCount);
+        }
 
         //object handling
         for (int i = 0; i<Interactables.getCount(); i++){
