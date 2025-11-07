@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.maps.MapObjects;
 import com.badlogic.gdx.maps.MapProperties;
@@ -20,30 +21,48 @@ import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 
 import static java.lang.Math.floor;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import jdk.internal.org.jline.terminal.impl.LineDisciplineTerminal;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 //Main game class, will manage the camera and will store information about the map
 
 public class MapManager implements Screen {
-
     private Game game;
+    private String mapFilePath;
     private OrthogonalTiledMapRenderer renderer;
     private Player player;
     private OrthographicCamera camera;
     private OrthographicCamera timerCamera;
     private TiledMapTileLayer roadLayer;
+    private TiledMapTileLayer winLayer;
     private SpriteBatch batch;
     private MapObjects Interactables;
     private EventManager EM;
     private Timer timer;
-    private BitmapFont font;
+    private final BitmapFont font;
     private GlyphLayout layout;
+
+	// Pause state/UI
+	private boolean paused = false;
+    private boolean gameOver = false;
+	private Stage uiStage;
+	private Skin uiSkin;
+	private Table pauseTable;
+    private Table endTable;
+    private Table passTable;
 
     // Temporary code so that it will show whichever tilemap is in the file location, will have to move to render once things are moving
     public MapManager(Game game, String mapFile){
         this.game = game;
+        this.mapFilePath = mapFile;
         TiledMap map = new TmxMapLoader().load(mapFile);// this file is a temporary one to see if the renderer is working, its not our final one
         this.roadLayer=(TiledMapTileLayer) map.getLayers().get("Road"); // out of all layers this is safe layer which the player can move on it.
+        this.winLayer=(TiledMapTileLayer) map.getLayers().get("WinCondition"); // This layer is the layer at which the game is won and ends
         Interactables = map.getLayers().get("Interactables").getObjects();//Gets all the interactables on the object layer
         EM = new EventManager(Interactables);// Creates a Event manager which handles getting information about the events on the map
         float unitScale = 1/16f;// 1 world unit ==16pixels
@@ -53,30 +72,192 @@ public class MapManager implements Screen {
         this.renderer.setView(camera);
         this.batch = new SpriteBatch();
         player = new Player(new Vector2(13,36));
+
+        FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("ui/arial.ttf"));
+        FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
+        parameter.size = 48; // font size 12 pixels
+        this.font = generator.generateFont(parameter);
+        generator.dispose(); // don't forget to dispose to avoid memory leaks!
     }
 
     @Override
     public void show() {
-    timer = new Timer(5);
-    timer.startTimer();
+        timer = new Timer(1);
+        timer.startTimer();
 
-    font = new BitmapFont();
-    font.setColor(1,1,1,1); //colour is white
-    font.getData().setScale(3f);
+        layout = new GlyphLayout();
 
-    layout = new GlyphLayout();
+        timerCamera = new OrthographicCamera();
+        timerCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
-    timerCamera = new OrthographicCamera();
-    timerCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-
+		// UI for pause menu
+		uiStage = new Stage(new ScreenViewport());
+		uiSkin = new Skin(Gdx.files.internal("ui/uiskin.json"));
+		buildPauseUI();
+        buildFailGUI();
+        buildPassUI();
     }
 
+	private void buildPauseUI() {
+		pauseTable = new Table(uiSkin);
+		pauseTable.setFillParent(true);
+		pauseTable.defaults().pad(10);
+		uiStage.addActor(pauseTable);
+
+		Label title = new Label("Pause", uiSkin);
+		title.setFontScale(3.6f); // 3x larger (was 1.2f)
+		title.setAlignment(Align.center);
+		TextButton resumeBtn = new TextButton("Resume", uiSkin);
+		resumeBtn.getLabel().setFontScale(3.0f); // 3x larger
+		TextButton quitBtn = new TextButton("Quit", uiSkin);
+		quitBtn.getLabel().setFontScale(3.0f); // 3x larger
+
+		Table window = new Table(uiSkin);
+		window.defaults().pad(20).minWidth(200).minHeight(60); // Larger padding and min sizes for buttons
+		window.add(title).center().padBottom(40).row();
+		window.add(resumeBtn).fillX().minHeight(80).row();
+		window.add(quitBtn).fillX().minHeight(80);
+
+		pauseTable.add().expand().row();
+		pauseTable.add(window).center();
+		pauseTable.row();
+		pauseTable.add().expand();
+
+		pauseTable.setVisible(false);
+
+		resumeBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
+			@Override
+			public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
+				togglePause();
+			}
+		});
+
+		quitBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
+			@Override
+			public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
+				Gdx.app.exit(); // Properly exit the application
+			}
+		});
+	}
+
+    private void buildFailGUI() {
+        endTable = new Table(uiSkin);
+        endTable.setFillParent(true);
+        endTable.defaults().pad(10);
+        uiStage.addActor(endTable);
+
+        Label passTitle = new Label("You ran out of time and failed to escape university!", uiSkin);
+        passTitle.setFontScale(3.6f);
+        passTitle.setAlignment(Align.center);
+        passTitle.setColor(new Color(0.7f, 0f, 0f, 1f));
+
+        TextButton restartBtn = new TextButton("Restart", uiSkin);
+        restartBtn.getLabel().setFontScale(3.0f);
+        TextButton quitBtn = new TextButton("Quit", uiSkin);
+        quitBtn.getLabel().setFontScale(3.0f);
+
+        Table window = new Table(uiSkin);
+        window.defaults().pad(20).minWidth(200).minHeight(60);
+        window.add(passTitle).center().padBottom(40).row();
+        window.add(restartBtn).fillX().minHeight(80).row();
+        window.add(quitBtn).fillX().minHeight(80);
+
+        endTable.add().expand().row();
+        endTable.add(window).center();
+        endTable.row();
+        endTable.add().expand();
+
+        endTable.setVisible(false);
+
+        restartBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
+            @Override
+            public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
+                game.setScreen(new MapManager(game, mapFilePath));
+            }
+        });
+
+        quitBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
+            @Override
+            public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
+                Gdx.app.exit();
+            }
+        });
+    }
+
+    private void buildPassUI() {
+        passTable = new Table(uiSkin);
+        passTable.setFillParent(true);
+        passTable.defaults().pad(10);
+        uiStage.addActor(passTable);
+
+        Label passTitle = new Label("You solved the puzzles and ESCAPED THE UNI!", uiSkin);
+        passTitle.setFontScale(3.6f);
+        passTitle.setAlignment(Align.center);
+        passTitle.setColor(new Color(1f, 0.84f, 0f, 1f));
+
+        TextButton restartBtn = new TextButton("Play Again", uiSkin);
+        restartBtn.getLabel().setFontScale(3.0f);
+        TextButton quitBtn = new TextButton("Quit", uiSkin);
+        quitBtn.getLabel().setFontScale(3.0f);
+
+        Table window = new Table(uiSkin);
+        window.defaults().pad(20).minWidth(200).minHeight(60);
+        window.add(passTitle).center().padBottom(40).row();
+        window.add(restartBtn).fillX().minHeight(80).row();
+        window.add(quitBtn).fillX().minHeight(80);
+
+        passTable.add().expand().row();
+        passTable.add(window).center();
+        passTable.row();
+        passTable.add().expand();
+
+        passTable.setVisible(false);
+
+        restartBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
+            @Override
+            public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
+                game.setScreen(new MapManager(game, mapFilePath));
+            }
+        });
+
+        quitBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
+            @Override
+            public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
+                Gdx.app.exit();
+            }
+        });
+    }
+
+	private void togglePause() {
+		paused = !paused;
+		if (paused) {
+			if (timer != null) timer.pauseTimer();
+			if (pauseTable != null) pauseTable.setVisible(true);
+			Gdx.input.setInputProcessor(uiStage);
+		} else {
+			if (timer != null) timer.startTimer();
+			if (pauseTable != null) pauseTable.setVisible(false);
+			Gdx.input.setInputProcessor(null);
+		}
+	}
+
     @Override
-    public void render(float v) {
+	public void render(float v) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         this.renderer.setView(camera);
         this.renderer.render();
+
+		// Toggle pause on ESC (disabled during game over)
+		if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) && !gameOver) {
+			togglePause();
+		}
+
+		// Only process gameplay when not paused or game over
+		if (!paused && !gameOver) {
+			inputHandler();
+			player.update(Gdx.graphics.getDeltaTime());
+		}
         batch.setProjectionMatrix(camera.combined);// this ensures that player sprite use the same world units as the map.
         batch.begin();
         player.draw(batch);
@@ -89,16 +270,33 @@ public class MapManager implements Screen {
         // appears in top right corner
         float x = Gdx.graphics.getWidth() - layout.width - 20;
         float y = Gdx.graphics.getHeight() - 20;
-        font.draw(batch, timerText, x, y);
+		font.draw(batch, timerText, x, y);
         batch.end();
 
-        inputHandler();
+        // Trigger game over when timer hits zero
+        if (!gameOver && timer.getSeconds() <= 0) {
+            gameOver = true;
+            if (pauseTable != null) pauseTable.setVisible(false);
+            if (endTable != null) endTable.setVisible(true);
+            if (timer != null && timer.getRunning()) timer.pauseTimer();
+            Gdx.input.setInputProcessor(uiStage);
+        }
 
+		// Draw UI overlays
+		if (paused || gameOver) {
+			uiStage.act();
+			uiStage.draw();
+		}
     }
 
     @Override
     public void resize(int i, int i1) {
-
+		if (uiStage != null) {
+			uiStage.getViewport().update(i, i1, true);
+		}
+		if (timerCamera != null) {
+			timerCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		}
     }
 
     @Override
@@ -118,7 +316,8 @@ public class MapManager implements Screen {
 
     @Override
     public void dispose() {
-
+		if (uiStage != null) uiStage.dispose();
+		if (uiSkin != null) uiSkin.dispose();
     }
     public boolean isTileSafe(float x, float y){
         float playerWidth = player.getWidth();
@@ -134,6 +333,23 @@ public class MapManager implements Screen {
         // Safe only if ALL corners are on a road tile
         return bottomLeft && bottomRight && topLeft && topRight;
     }
+
+    private boolean playerOnWinTile(float x, float y) {
+        float w = player.getWidth();
+        float h = player.getHeight();
+        float eps = 0.01f;
+
+        boolean bl = IsVictoryArea(x, y);
+        boolean br = IsVictoryArea(x + w - eps, y);
+        boolean tl = IsVictoryArea(x, y + h - eps);
+        boolean tr = IsVictoryArea(x + w - eps, y + h - eps);
+
+        return bl || br || tl || tr;
+    }
+
+
+
+
     public boolean IsAreaSafe(float x,float y) { // checks whether the tile at the given position is safe to move onto.
         int col = (int) floor( x);
         int row = (int) floor(y);
@@ -147,6 +363,19 @@ public class MapManager implements Screen {
         //the getcell() will returns null if there is no tile on the roadlayer at this position
     }
 
+    public boolean IsVictoryArea(float x, float y) {
+        int col = (int) floor(x);
+        int row = (int) floor(y);
+
+        if (col < 0 || row < 0 || col >= winLayer.getWidth() || row >= winLayer.getHeight()) {
+            return false;
+        }
+
+        TiledMapTileLayer.Cell cell = winLayer.getCell(col, row);
+        return cell != null && cell.getTile() != null;
+    }
+
+
     public void inputHandler(){
         float delta = Gdx.graphics.getDeltaTime();
         float speed = player.getSpeed();
@@ -156,14 +385,25 @@ public class MapManager implements Screen {
         float NewPositionY = CurrentPosition.y;
 
         // Calculate the New movements based on input
-        if (Gdx.input.isKeyPressed(Input.Keys.D)) {
-            NewPositionX += speed * delta; }
-        if (Gdx.input.isKeyPressed(Input.Keys.A)) {
-            NewPositionX -= speed * delta; }
-        if (Gdx.input.isKeyPressed(Input.Keys.W)) {
-            NewPositionY += speed * delta; }
-        if (Gdx.input.isKeyPressed(Input.Keys.S)) {
-            NewPositionY -= speed * delta; }
+        boolean right = Gdx.input.isKeyPressed(Input.Keys.D);
+        boolean left = Gdx.input.isKeyPressed(Input.Keys.A);
+        boolean up = Gdx.input.isKeyPressed(Input.Keys.W);
+        boolean down = Gdx.input.isKeyPressed(Input.Keys.S);
+
+        if (right) { NewPositionX += speed * delta; }
+        if (left) { NewPositionX -= speed * delta; }
+        if (up) { NewPositionY += speed * delta; }
+        if (down) { NewPositionY -= speed * delta; }
+
+        Vector2 p = player.getPlayerPosition();
+        if (playerOnWinTile(p.x, p.y)) {
+            gameOver = true;
+            if (pauseTable != null) pauseTable.setVisible(false);
+            if (endTable != null) endTable.setVisible(false);   // hide fail table if it exists
+            if (passTable != null) passTable.setVisible(true);  // SHOW the pass table
+            if (timer != null && timer.getRunning()) timer.pauseTimer();
+            Gdx.input.setInputProcessor(uiStage);
+        }
 
         // collisions check by Separating axes
         // check x-axes
@@ -173,10 +413,20 @@ public class MapManager implements Screen {
             NewPositionX = CurrentPosition.x; // use current x if move failed
         }
 
+
         //check y-axes
         if (isTileSafe(CurrentPosition.x, NewPositionY)) {
             player.move(CurrentPosition.x, NewPositionY);
         }
+        // Update player animation state based on input
+        boolean moving = right || left || up || down;
+        Player.Direction dir = null;
+        if (right) dir = Player.Direction.RIGHT;
+        else if (left) dir = Player.Direction.LEFT;
+        else if (up) dir = Player.Direction.UP;
+        else if (down) dir = Player.Direction.DOWN;
+        player.setAnimationState(moving, dir);
+
         //object handling
         for (int i = 0; i<Interactables.getCount(); i++){
             MapObject Object = Interactables.get(i);

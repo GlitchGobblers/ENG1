@@ -8,7 +8,7 @@ public class Timer {
     private Boolean running;
     private long start;
 
-    public Timer (int minutes) {
+    public Timer(int minutes) {
         this.seconds = minutes * 60;
         this.running = false;
     }
@@ -23,8 +23,14 @@ public class Timer {
         startTimer();
     }
     public void stopTimer() {
-        // use this for pause menu
+        // Stop without preserving remaining time (legacy behavior)
         running = false;
+    }
+
+    public void pauseTimer() {
+        // Preserve remaining time so resume continues from where it left off
+        this.seconds = getSeconds();
+        this.running = false;
     }
 
     public Boolean getRunning() {
@@ -35,6 +41,7 @@ public class Timer {
         if (running == false) {
             return seconds;
         }
+
         int currentDuration = (int) (TimeUtils.timeSinceMillis(start) / 1000);
         int currentseconds = seconds - currentDuration;
         return currentseconds;
