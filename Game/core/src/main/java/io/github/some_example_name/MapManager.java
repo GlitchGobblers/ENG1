@@ -106,12 +106,12 @@ public class MapManager implements Screen {
         camera.setToOrtho(false, 60, 40);
         this.renderer.setView(camera);
         this.batch = new SpriteBatch();
-        player = new Player(new Vector2(11, 4));
+        player = new Player(new Vector2(9.75f, 3));
         interact =  new Texture("Art/Interact.png");
         barrierTexture = new Texture("Art/Props/Crate_Medium_Closed.png");
         keyTexture = new Texture("Art/Characters/Main Character/Test Character2.png");
         barrierRect = new Rectangle(37, 21, 2, 2); // place the barrier on the map.
-        keyRect = new Rectangle(10, 3, 2, 2); // place the key for the barrier on the map
+        keyRect = new Rectangle(10, 23, 2, 2); // place the key for the barrier on the map
 
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("ui/arial.ttf"));
         FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
