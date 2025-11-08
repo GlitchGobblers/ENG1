@@ -82,7 +82,7 @@ public class MapManager implements Screen {
     public MapManager(Game game, String mapFile) {
         this(game, mapFile, SplashScreen.Difficulty.EASY);
     }
-    
+
     public MapManager(Game game, String mapFile, SplashScreen.Difficulty difficulty) {
         this.difficulty = difficulty;
         this.game = game;
@@ -112,12 +112,12 @@ public class MapManager implements Screen {
         camera.setToOrtho(false, 60, 40);
         this.renderer.setView(camera);
         this.batch = new SpriteBatch();
-        player = new Player(new Vector2(9.75f, 3));
+        player = new Player(new Vector2(9.75f, 2));
         interact =  new Texture("Art/Interact.png");
         barrierTexture = new Texture("Art/Props/Crate_Medium_Closed.png");
         keyTexture = new Texture("Art/Characters/Main Character/Test Character2.png");
         barrierRect = new Rectangle(37, 21, 2, 2); // place the barrier on the map.
-        keyRect = new Rectangle(10, 23, 2, 2); // place the key for the barrier on the map
+        keyRect = new Rectangle(3, 30, 2, 2); // place the key for the barrier on the map
 
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("ui/arial.ttf"));
         FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
@@ -305,10 +305,10 @@ public class MapManager implements Screen {
     public void render(float v) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        
+
         // Apply the viewport (important for proper rendering with black bars)
         gameViewport.apply();
-        
+
         this.renderer.setView(camera);
         this.renderer.render();
 
@@ -342,7 +342,7 @@ public class MapManager implements Screen {
         float y = Gdx.graphics.getHeight() - 20;
         font.setColor(Color.BLACK);
         font.draw(batch, timerText, x, y);
-        
+
         // Display score in top left corner
         String scoreText = "Score: " + score;
         layout.setText(font, scoreText);
@@ -561,7 +561,7 @@ public class MapManager implements Screen {
     /**
      * Modifies the score by the specified amount.
      * Can be positive (to increase) or negative (to decrease) the score.
-     * 
+     *
      * @param amount The amount to add to the score (can be positive or negative)
      */
     public void modifyScore(int amount) {
