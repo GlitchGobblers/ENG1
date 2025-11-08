@@ -144,10 +144,12 @@ public class MapManager implements Screen {
         uiStage.addActor(pauseTable);
 
         Label title = new Label("Pause", uiSkin);
-        title.setFontScale(3.6f); // 3x larger (was 1.2f)
+        title.setFontScale(3.6f);
         title.setAlignment(Align.center);
         TextButton resumeBtn = new TextButton("Resume", uiSkin);
         resumeBtn.getLabel().setFontScale(3.0f); // 3x larger
+        TextButton restartBtn = new TextButton("Restart", uiSkin);
+        restartBtn.getLabel().setFontScale(3.0f); // 3x larger
         TextButton quitBtn = new TextButton("Quit", uiSkin);
         quitBtn.getLabel().setFontScale(3.0f); // 3x larger
 
@@ -155,6 +157,7 @@ public class MapManager implements Screen {
         window.defaults().pad(20).minWidth(200).minHeight(60); // Larger padding and min sizes for buttons
         window.add(title).center().padBottom(40).row();
         window.add(resumeBtn).fillX().minHeight(80).row();
+        window.add(restartBtn).fillX().minHeight(80).row();
         window.add(quitBtn).fillX().minHeight(80);
 
         pauseTable.add().expand().row();
@@ -168,6 +171,13 @@ public class MapManager implements Screen {
             @Override
             public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
                 togglePause();
+            }
+        });
+
+        restartBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
+            @Override
+            public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
+                game.setScreen(new SplashScreen(game));
             }
         });
 
@@ -470,11 +480,6 @@ public class MapManager implements Screen {
         boolean left = Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A);
         boolean up = Gdx.input.isKeyPressed(Input.Keys.UP) || Gdx.input.isKeyPressed(Input.Keys.W);
         boolean down = Gdx.input.isKeyPressed(Input.Keys.DOWN) || Gdx.input.isKeyPressed(Input.Keys.S);
-
-        // TEST CODE: Increase score by 10 when W is pressed (remove after testing)
-        if (Gdx.input.isKeyJustPressed(Input.Keys.W)) {
-            modifyScore(10);
-        }
 
         if (right) { NewPositionX += speed * delta; }
         if (left) { NewPositionX -= speed * delta; }
