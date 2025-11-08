@@ -19,6 +19,8 @@ import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
+import com.badlogic.gdx.audio.Music;
+
 
 import static java.lang.Math.floor;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -55,6 +57,7 @@ public class MapManager implements Screen {
     private GlyphLayout layout;
     private Texture interact;
     private int score = 0;
+    private Music runningSound;
 
     // Pause state/UI
     private boolean paused = false;
@@ -121,6 +124,10 @@ public class MapManager implements Screen {
         parameter.size = 48;
         this.font = generator.generateFont(parameter);
         generator.dispose(); // don't forget to dispose to avoid memory leaks!
+
+        runningSound = Gdx.audio.newMusic(Gdx.files.internal("Sound/running_sound.mp3"));
+        runningSound.setLooping(true);
+        runningSound.setVolume(0.45f);
     }
 
     @Override
@@ -285,6 +292,7 @@ public class MapManager implements Screen {
         if (paused) {
             if (timer != null) timer.pauseTimer();
             if (pauseTable != null) pauseTable.setVisible(true);
+            if (runningSound != null && runningSound.isPlaying()) runningSound.pause();
             Gdx.input.setInputProcessor(uiStage);
         } else {
             if (timer != null) timer.startTimer();
@@ -393,6 +401,7 @@ public class MapManager implements Screen {
     public void dispose() {
         if (uiStage != null) uiStage.dispose();
         if (uiSkin != null) uiSkin.dispose();
+        if (runningSound != null) runningSound.dispose();
     }
 
     public boolean isTileSafe(float x, float y) {
@@ -525,6 +534,12 @@ public class MapManager implements Screen {
 
         // Update player animation state based on input
         boolean moving = right || left || up || down;
+        // Running sound effect control
+        if (moving && !runningSound.isPlaying()) {
+            runningSound.play();
+        } else if (!moving && runningSound.isPlaying()) {
+            runningSound.pause();
+        }
         Player.Direction dir = null;
         if (right) dir = Player.Direction.RIGHT;
         else if (left) dir = Player.Direction.LEFT;
