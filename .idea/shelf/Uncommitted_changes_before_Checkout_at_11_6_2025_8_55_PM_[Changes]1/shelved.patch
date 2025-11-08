@@ -1,0 +1,19 @@
+Index: Game/core/src/main/java/io/github/some_example_name/Player.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package io.github.some_example_name;\n\nimport com.badlogic.gdx.graphics.g2d.Sprite;\nimport com.badlogic.gdx.graphics.Texture;\nimport com.badlogic.gdx.graphics.g2d.SpriteBatch;\nimport com.badlogic.gdx.math.Vector2;\n\npublic class Player {\n    private Vector2 position;// used to store the location of the player\n    private float speed = 3f;// used to set the movement speed of the player\n    private final Sprite playerSprite;\n    //private SpriteBatch batch;\n    private final float width;\n    private final float height;\n\n    public Player(Vector2 position, float unitScale) {\n        Texture texture = new Texture(\"Art/Characters/Main Character/Test Character.png\");\n        // using sprite gives more control of the texture\n        this.playerSprite = new Sprite(texture);\n\n        this.position = position;\n\n        this.width = (float) texture.getWidth() * unitScale;\n        this.height = (float) texture.getHeight() * unitScale;\n\n        this.playerSprite.setSize(width, height);\n    }\n\n    public float getWidth() {\n        return width;\n    }\n\n    public float getHeight() {\n        return height;\n    }\n\n    public Vector2 getPlayerPosition() {\n        return position;\n    }\n\n    public float getSpeed() {\n        return speed;\n    }\n\n    public void setSpeed(float speed){\n        this.speed = speed;\n    }\n\n    public void draw(SpriteBatch batch) {\n        // set sprite position to match player's world coordinates\n        playerSprite.setPosition(position.x, position.y);// position.x and position.y are in world units\n        playerSprite.draw(batch);\n\n    }\n\n    public void move(float x, float y) {// set player new position\n        position.x = x;\n        position.y = y;\n    }\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Game/core/src/main/java/io/github/some_example_name/Player.java b/Game/core/src/main/java/io/github/some_example_name/Player.java
+--- a/Game/core/src/main/java/io/github/some_example_name/Player.java	(revision aa3bd8118f341db1ef014501cf672fc2a1b36a65)
++++ b/Game/core/src/main/java/io/github/some_example_name/Player.java	(date 1762462503380)
+@@ -7,7 +7,7 @@
+ 
+ public class Player {
+     private Vector2 position;// used to store the location of the player
+-    private float speed = 3f;// used to set the movement speed of the player
++    private float speed = 10f;// used to set the movement speed of the player
+     private final Sprite playerSprite;
+     //private SpriteBatch batch;
+     private final float width;
