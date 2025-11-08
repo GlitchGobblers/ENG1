@@ -7,6 +7,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
@@ -37,6 +38,7 @@ import com.badlogic.gdx.math.Rectangle;
 //Main game class, will manage the camera and will store information about the map
 
 public class MapManager implements Screen {
+
     private Game game;
     private String mapFilePath;
     private OrthogonalTiledMapRenderer renderer;
@@ -51,6 +53,7 @@ public class MapManager implements Screen {
     private Timer timer;
     private final BitmapFont font;
     private GlyphLayout layout;
+    private Texture interact;
 
     // Pause state/UI
     private boolean paused = false;
@@ -95,10 +98,11 @@ public class MapManager implements Screen {
         this.camera = new OrthographicCamera();
 
         // temporary size to test, once developed slightly the user may be able to select the size of the game window in the main menu
-        camera.setToOrtho(false,60,40);
+        camera.setToOrtho(false, 60, 40);
         this.renderer.setView(camera);
         this.batch = new SpriteBatch();
-        player = new Player(new Vector2(13,36));
+        player = new Player(new Vector2(11, 4));
+        interact =  new Texture("Art/Interact.png");
         barrierTexture = new Texture("Art/Props/Crate_Medium_Closed.png");
         keyTexture = new Texture("Art/Characters/Main Character/Test Character2.png");
         barrierRect = new Rectangle(37, 21, 2, 2); // place the barrier on the map.
@@ -120,7 +124,6 @@ public class MapManager implements Screen {
 
         timerCamera = new OrthographicCamera();
         timerCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-
         // UI for pause menu
         uiStage = new Stage(new ScreenViewport());
         uiSkin = new Skin(Gdx.files.internal("ui/uiskin.json"));
@@ -356,7 +359,8 @@ public class MapManager implements Screen {
         if (uiStage != null) uiStage.dispose();
         if (uiSkin != null) uiSkin.dispose();
     }
-    public boolean isTileSafe(float x, float y){
+
+    public boolean isTileSafe(float x, float y) {
         float playerWidth = player.getWidth();
         float playerHeight = player.getHeight();
         float epsilon = 0.01f; // Prevents snagging on exact tile edges
@@ -393,11 +397,8 @@ public class MapManager implements Screen {
         return bl || br || tl || tr;
     }
 
-
-
-
-    public boolean IsAreaSafe(float x,float y) { // checks whether the tile at the given position is safe to move onto.
-        int col = (int) floor( x);
+    public boolean IsAreaSafe(float x, float y) { // checks whether the tile at the given position is safe to move onto.
+        int col = (int) floor(x);
         int row = (int) floor(y);
 
         if (roadLayer == null || col < 0 || row < 0 || col >= roadLayer.getWidth() || row >= roadLayer.getHeight()) {
@@ -421,8 +422,28 @@ public class MapManager implements Screen {
         return cell != null && cell.getTile() != null;
     }
 
+    public void objectCheck(Vector2 CurrentPosition) {
+        for (int i = 0; i < interactables.getCount(); i++) {
+            MapObject Object = interactables.get(i);
+            MapProperties ObjectProperties = Object.getProperties();
+            Vector2 ObjectPosition = new Vector2((Float) ObjectProperties.get("x") / 16, (Float) ObjectProperties.get("y") / 16);
+            Vector2 ObjectSize = new Vector2((float) ObjectProperties.get("width") / 16, (float) ObjectProperties.get("height") / 16);
+            if (CurrentPosition.x >= (ObjectPosition.x) && CurrentPosition.x <= ((ObjectPosition.x + ObjectSize.x)) && // Checks if the player is inside the object area
+                CurrentPosition.y >= (ObjectPosition.y) && CurrentPosition.y <= ((ObjectPosition.y + ObjectSize.y))) {
+                batch.begin();
+                batch.draw(interact, CurrentPosition.x*20, (CurrentPosition.y+2 )*20);
+                batch.end();
+                if (Gdx.input.isKeyPressed(Input.Keys.E)) {
+                    String change = EM.event(i);
+                    if (Float.parseFloat(change) <= 10) {
+                        player.setSpeed((float) Integer.parseInt(change));
+                    }
+                }
+            }
+        }
+    }
 
-    public void inputHandler(){
+    public void inputHandler() {
         float delta = Gdx.graphics.getDeltaTime();
         float speed = player.getSpeed();
 
@@ -463,7 +484,10 @@ public class MapManager implements Screen {
         //check y-axes
         if (isTileSafe(CurrentPosition.x, NewPositionY)) {
             player.move(CurrentPosition.x, NewPositionY);
+        } else {
+            NewPositionX = CurrentPosition.x; // use current x if move failed
         }
+
         // Update player animation state based on input
         boolean moving = right || left || up || down;
         Player.Direction dir = null;
@@ -481,22 +505,6 @@ public class MapManager implements Screen {
             System.out.println("the key is been collected"+ eventCount);
         }
 
-        //object handling
-        for (int i = 0; i< interactables.getCount(); i++){
-            MapObject Object = interactables.get(i);
-            MapProperties ObjectProperties = Object.getProperties();
-            Vector2 ObjectPosition = new Vector2((Float) ObjectProperties.get("x")/16, (Float)ObjectProperties.get("y")/16);
-            Vector2 ObjectSize = new Vector2((float)ObjectProperties.get("width")/16, (float) ObjectProperties.get("height")/16);
-            if (CurrentPosition.x >= (ObjectPosition.x) && CurrentPosition.x <= ((ObjectPosition.x + ObjectSize.x)) && // Checks if the player is inside the object area
-                CurrentPosition.y >= (ObjectPosition.y) && CurrentPosition.y <= ((ObjectPosition.y + ObjectSize.y))){
-                if (Gdx.input.isKeyPressed(Input.Keys.E)){
-                    String change = EM.event(i);
-                    if (Float.parseFloat(change) <= 10){
-                        player.setSpeed((float)Integer.parseInt(change));
-                    }
-                }
-            }
-        }
+        objectCheck(CurrentPosition);
     }
-
 }

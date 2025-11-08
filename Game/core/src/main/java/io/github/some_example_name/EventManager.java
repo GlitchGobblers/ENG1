@@ -21,6 +21,10 @@ public class EventManager {
             if (Objects.equals((String) EventProperties.get("Event"), "StatChange")){
                 return (String)EventProperties.get("StatChange");
             }
+            //uncomment when victory screen is implemented
+            //if(Objects.equals((String) EventProperties.get("Event"),  "Win")){
+                //call victory screen
+            //}
         }
         return null;
     }
