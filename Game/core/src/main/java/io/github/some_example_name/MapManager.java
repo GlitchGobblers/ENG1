@@ -466,10 +466,10 @@ public class MapManager implements Screen {
         float NewPositionY = CurrentPosition.y;
 
         // Calculate the New movements based on input
-        boolean right = Gdx.input.isKeyPressed(Input.Keys.D);
-        boolean left = Gdx.input.isKeyPressed(Input.Keys.A);
-        boolean up = Gdx.input.isKeyPressed(Input.Keys.W);
-        boolean down = Gdx.input.isKeyPressed(Input.Keys.S);
+        boolean right = Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.D);
+        boolean left = Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A);
+        boolean up = Gdx.input.isKeyPressed(Input.Keys.UP) || Gdx.input.isKeyPressed(Input.Keys.W);
+        boolean down = Gdx.input.isKeyPressed(Input.Keys.DOWN) || Gdx.input.isKeyPressed(Input.Keys.S);
 
         // TEST CODE: Increase score by 10 when W is pressed (remove after testing)
         if (Gdx.input.isKeyJustPressed(Input.Keys.W)) {
