@@ -1,0 +1,19 @@
+Index: Game/core/src/main/java/io/github/some_example_name/Player.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package io.github.some_example_name;\n\n//class to store information about the player so that MapManager can draw the player\n\n\nimport com.badlogic.gdx.Gdx;\nimport com.badlogic.gdx.graphics.g2d.Sprite;\nimport com.badlogic.gdx.graphics.Texture;\nimport com.badlogic.gdx.graphics.g2d.SpriteBatch;\nimport com.badlogic.gdx.math.Vector2;\n\npublic class Player {\n    private Vector2 position;// used to store the location of the player\n    private float speed = 3f;// used to set the movement speed of the player\n    private Texture texture;\n    private Sprite playerSprite;\n    //private SpriteBatch batch;\n    private float width;\n    private float height;\n    //float unitScale=1/16f;\n\n    public Player(Vector2 position) {\n        this.texture = new Texture(\"Art/Characters/Main Character/Test Character.png\");\n        this.playerSprite = new Sprite(texture); // using sprite gives more control of the texture\n        this.position = position;\n        //texture size from pixel to world units(1 unit=16 pixel)\n        this.width = (float)texture.getWidth()/16f;\n        this.height = (float)texture.getHeight()/16f;\n        this.playerSprite.setSize(width, height);\n\n    }\n\n    public void create() {\n\n    }\n    public float getWidth() {\n        return width;\n    }\n\n    public float getHeight() {\n        return height;\n    }\n    public Vector2 getPlayerPosition() {\n        return position;\n    }\n   public float getSpeed() {\n        return speed;\n   }\n   public void setSpeed(float speed){\n        this.speed = speed;\n   }\n    public void draw(SpriteBatch batch) {\n        // set sprite position to match player's world coordinates\n        playerSprite.setPosition(position.x, position.y);// position.x and position.y are in world units\n        playerSprite.draw(batch);\n\n    }\n    public void dispose() {\n\n    }\n    public void move(float x, float y) {// set player new position\n        position.x = x;\n        position.y = y;\n    }\n    public void setTexture(String texture){\n        this.texture = new Texture(texture);\n    }\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Game/core/src/main/java/io/github/some_example_name/Player.java b/Game/core/src/main/java/io/github/some_example_name/Player.java
+--- a/Game/core/src/main/java/io/github/some_example_name/Player.java	(revision 5a5344dd1cafcd3bf0e487059d9343f7c7f089bc)
++++ b/Game/core/src/main/java/io/github/some_example_name/Player.java	(date 1762462399406)
+@@ -11,7 +11,7 @@
+ 
+ public class Player {
+     private Vector2 position;// used to store the location of the player
+-    private float speed = 3f;// used to set the movement speed of the player
++    private float speed = 10f;// used to set the movement speed of the player
+     private Texture texture;
+     private Sprite playerSprite;
+     //private SpriteBatch batch;
