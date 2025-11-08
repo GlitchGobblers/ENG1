@@ -41,41 +41,55 @@ public class MapManager implements Screen {
     private TiledMapTileLayer roadLayer;
     private TiledMapTileLayer winLayer;
     private SpriteBatch batch;
-    private MapObjects Interactables;
+    private MapObjects interactables;
     private EventManager EM;
     private Timer timer;
     private final BitmapFont font;
     private GlyphLayout layout;
 
-	// Pause state/UI
-	private boolean paused = false;
+    // Pause state/UI
+    private boolean paused = false;
     private boolean gameOver = false;
-	private Stage uiStage;
-	private Skin uiSkin;
-	private Table pauseTable;
+    private Stage uiStage;
+    private Skin uiSkin;
+    private Table pauseTable;
     private Table endTable;
     private Table passTable;
+    private float unitScale = 1/16f;
 
     // Temporary code so that it will show whichever tilemap is in the file location, will have to move to render once things are moving
-    public MapManager(Game game, String mapFile){
+    public MapManager(Game game, String mapFile) {
         this.game = game;
         this.mapFilePath = mapFile;
-        TiledMap map = new TmxMapLoader().load(mapFile);// this file is a temporary one to see if the renderer is working, its not our final one
-        this.roadLayer=(TiledMapTileLayer) map.getLayers().get("Road"); // out of all layers this is safe layer which the player can move on it.
-        this.winLayer=(TiledMapTileLayer) map.getLayers().get("WinCondition"); // This layer is the layer at which the game is won and ends
-        Interactables = map.getLayers().get("Interactables").getObjects();//Gets all the interactables on the object layer
-        EM = new EventManager(Interactables);// Creates a Event manager which handles getting information about the events on the map
-        float unitScale = 1/16f;// 1 world unit ==16pixels
+
+        // this file is a temporary one to see if the renderer is working, its not our final one
+        TiledMap map = new TmxMapLoader().load(mapFile);
+
+        // out of all layers this is safe layer which the player can move on it.
+        this.roadLayer = (TiledMapTileLayer) map.getLayers().get("Road");
+
+        // This layer is the layer at which the game is won and ends
+        this.winLayer = (TiledMapTileLayer) map.getLayers().get("WinCondition");
+
+        // Gets all the interactables on the object layer
+        interactables = map.getLayers().get("Interactables").getObjects();
+
+        // Creates a Event manager which handles getting information about the events on the map
+        EM = new EventManager(interactables);
+
         this.renderer = new OrthogonalTiledMapRenderer(map, unitScale);
+
         this.camera = new OrthographicCamera();
-        camera.setToOrtho(false,60,40); // temporary size to test, once developed slightly the user may be able to select the size of the game window in the main menu
+
+        // temporary size to test, once developed slightly the user may be able to select the size of the game window in the main menu
+        camera.setToOrtho(false,60,40);
         this.renderer.setView(camera);
         this.batch = new SpriteBatch();
         player = new Player(new Vector2(13,36));
 
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("ui/arial.ttf"));
         FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
-        parameter.size = 48; // font size 12 pixels
+        parameter.size = 48;
         this.font = generator.generateFont(parameter);
         generator.dispose(); // don't forget to dispose to avoid memory leaks!
     }
@@ -90,55 +104,55 @@ public class MapManager implements Screen {
         timerCamera = new OrthographicCamera();
         timerCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
-		// UI for pause menu
-		uiStage = new Stage(new ScreenViewport());
-		uiSkin = new Skin(Gdx.files.internal("ui/uiskin.json"));
-		buildPauseUI();
+        // UI for pause menu
+        uiStage = new Stage(new ScreenViewport());
+        uiSkin = new Skin(Gdx.files.internal("ui/uiskin.json"));
+        buildPauseUI();
         buildFailGUI();
         buildPassUI();
     }
 
-	private void buildPauseUI() {
-		pauseTable = new Table(uiSkin);
-		pauseTable.setFillParent(true);
-		pauseTable.defaults().pad(10);
-		uiStage.addActor(pauseTable);
+    private void buildPauseUI() {
+        pauseTable = new Table(uiSkin);
+        pauseTable.setFillParent(true);
+        pauseTable.defaults().pad(10);
+        uiStage.addActor(pauseTable);
 
-		Label title = new Label("Pause", uiSkin);
-		title.setFontScale(3.6f); // 3x larger (was 1.2f)
-		title.setAlignment(Align.center);
-		TextButton resumeBtn = new TextButton("Resume", uiSkin);
-		resumeBtn.getLabel().setFontScale(3.0f); // 3x larger
-		TextButton quitBtn = new TextButton("Quit", uiSkin);
-		quitBtn.getLabel().setFontScale(3.0f); // 3x larger
+        Label title = new Label("Pause", uiSkin);
+        title.setFontScale(3.6f); // 3x larger (was 1.2f)
+        title.setAlignment(Align.center);
+        TextButton resumeBtn = new TextButton("Resume", uiSkin);
+        resumeBtn.getLabel().setFontScale(3.0f); // 3x larger
+        TextButton quitBtn = new TextButton("Quit", uiSkin);
+        quitBtn.getLabel().setFontScale(3.0f); // 3x larger
 
-		Table window = new Table(uiSkin);
-		window.defaults().pad(20).minWidth(200).minHeight(60); // Larger padding and min sizes for buttons
-		window.add(title).center().padBottom(40).row();
-		window.add(resumeBtn).fillX().minHeight(80).row();
-		window.add(quitBtn).fillX().minHeight(80);
+        Table window = new Table(uiSkin);
+        window.defaults().pad(20).minWidth(200).minHeight(60); // Larger padding and min sizes for buttons
+        window.add(title).center().padBottom(40).row();
+        window.add(resumeBtn).fillX().minHeight(80).row();
+        window.add(quitBtn).fillX().minHeight(80);
 
-		pauseTable.add().expand().row();
-		pauseTable.add(window).center();
-		pauseTable.row();
-		pauseTable.add().expand();
+        pauseTable.add().expand().row();
+        pauseTable.add(window).center();
+        pauseTable.row();
+        pauseTable.add().expand();
 
-		pauseTable.setVisible(false);
+        pauseTable.setVisible(false);
 
-		resumeBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
-			@Override
-			public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
-				togglePause();
-			}
-		});
+        resumeBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
+            @Override
+            public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
+                togglePause();
+            }
+        });
 
-		quitBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
-			@Override
-			public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
-				Gdx.app.exit(); // Properly exit the application
-			}
-		});
-	}
+        quitBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
+            @Override
+            public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
+                Gdx.app.exit(); // Properly exit the application
+            }
+        });
+    }
 
     private void buildFailGUI() {
         endTable = new Table(uiSkin);
@@ -228,36 +242,36 @@ public class MapManager implements Screen {
         });
     }
 
-	private void togglePause() {
-		paused = !paused;
-		if (paused) {
-			if (timer != null) timer.pauseTimer();
-			if (pauseTable != null) pauseTable.setVisible(true);
-			Gdx.input.setInputProcessor(uiStage);
-		} else {
-			if (timer != null) timer.startTimer();
-			if (pauseTable != null) pauseTable.setVisible(false);
-			Gdx.input.setInputProcessor(null);
-		}
-	}
+    private void togglePause() {
+        paused = !paused;
+        if (paused) {
+            if (timer != null) timer.pauseTimer();
+            if (pauseTable != null) pauseTable.setVisible(true);
+            Gdx.input.setInputProcessor(uiStage);
+        } else {
+            if (timer != null) timer.startTimer();
+            if (pauseTable != null) pauseTable.setVisible(false);
+            Gdx.input.setInputProcessor(null);
+        }
+    }
 
     @Override
-	public void render(float v) {
+    public void render(float v) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         this.renderer.setView(camera);
         this.renderer.render();
 
-		// Toggle pause on ESC (disabled during game over)
-		if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) && !gameOver) {
-			togglePause();
-		}
+        // Toggle pause on ESC (disabled during game over)
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) && !gameOver) {
+            togglePause();
+        }
 
-		// Only process gameplay when not paused or game over
-		if (!paused && !gameOver) {
-			inputHandler();
-			player.update(Gdx.graphics.getDeltaTime());
-		}
+        // Only process gameplay when not paused or game over
+        if (!paused && !gameOver) {
+            inputHandler();
+            player.update(Gdx.graphics.getDeltaTime());
+        }
         batch.setProjectionMatrix(camera.combined);// this ensures that player sprite use the same world units as the map.
         batch.begin();
         player.draw(batch);
@@ -270,7 +284,7 @@ public class MapManager implements Screen {
         // appears in top right corner
         float x = Gdx.graphics.getWidth() - layout.width - 20;
         float y = Gdx.graphics.getHeight() - 20;
-		font.draw(batch, timerText, x, y);
+        font.draw(batch, timerText, x, y);
         batch.end();
 
         // Trigger game over when timer hits zero
@@ -282,21 +296,21 @@ public class MapManager implements Screen {
             Gdx.input.setInputProcessor(uiStage);
         }
 
-		// Draw UI overlays
-		if (paused || gameOver) {
-			uiStage.act();
-			uiStage.draw();
-		}
+        // Draw UI overlays
+        if (paused || gameOver) {
+            uiStage.act();
+            uiStage.draw();
+        }
     }
 
     @Override
     public void resize(int i, int i1) {
-		if (uiStage != null) {
-			uiStage.getViewport().update(i, i1, true);
-		}
-		if (timerCamera != null) {
-			timerCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		}
+        if (uiStage != null) {
+            uiStage.getViewport().update(i, i1, true);
+        }
+        if (timerCamera != null) {
+            timerCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        }
     }
 
     @Override
@@ -316,8 +330,8 @@ public class MapManager implements Screen {
 
     @Override
     public void dispose() {
-		if (uiStage != null) uiStage.dispose();
-		if (uiSkin != null) uiSkin.dispose();
+        if (uiStage != null) uiStage.dispose();
+        if (uiSkin != null) uiSkin.dispose();
     }
     public boolean isTileSafe(float x, float y){
         float playerWidth = player.getWidth();
@@ -428,8 +442,8 @@ public class MapManager implements Screen {
         player.setAnimationState(moving, dir);
 
         //object handling
-        for (int i = 0; i<Interactables.getCount(); i++){
-            MapObject Object = Interactables.get(i);
+        for (int i = 0; i< interactables.getCount(); i++){
+            MapObject Object = interactables.get(i);
             MapProperties ObjectProperties = Object.getProperties();
             Vector2 ObjectPosition = new Vector2((Float) ObjectProperties.get("x")/16, (Float)ObjectProperties.get("y")/16);
             Vector2 ObjectSize = new Vector2((float)ObjectProperties.get("width")/16, (float) ObjectProperties.get("height")/16);

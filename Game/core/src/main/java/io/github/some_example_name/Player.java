@@ -27,6 +27,7 @@ public class Player {
     // Collision size in world units (hitbox)
     private float width;
     private float height;
+
     // Visual size in world units (rendered sprite)
     private float renderWidth;
     private float renderHeight;
@@ -37,6 +38,7 @@ public class Player {
         // Load spritesheets
         this.idleSheet = new Texture("Art/Characters/Main Character/Character_Idle.png");
         this.walkSheet = new Texture("Art/Characters/Main Character/Character_Walk.png");
+
         // Use nearest filtering for crisp pixel art
         this.idleSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         this.walkSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
@@ -85,12 +87,15 @@ public class Player {
     public float getHeight() {
         return height;
     }
+
     public Vector2 getPlayerPosition() {
         return position;
     }
+
     public float getSpeed() {
         return speed;
     }
+
     public void setSpeed(float speed){
         this.speed = speed;
     }
