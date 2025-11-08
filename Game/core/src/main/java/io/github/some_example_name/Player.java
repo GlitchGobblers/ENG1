@@ -13,7 +13,7 @@ public class Player {
     public enum Direction { DOWN, LEFT, RIGHT, UP }
 
     private Vector2 position;// used to store the location of the player
-    private float speed = 4.2f;// used to set the movement speed of the player (40% increase)
+    private float speed = 6.2f;// used to set the movement speed of the player (40% increase)
 
     // Animation/state
     private Texture idleSheet;
