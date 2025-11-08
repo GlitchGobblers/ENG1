@@ -34,18 +34,18 @@ public class SplashScreen implements Screen {
     
     // Difficulty enum
     public enum Difficulty {
-        EASY(5.0f),
-        MEDIUM(4.5f),
-        HARD(4.0f);
+        EASY(5 * 60),
+        MEDIUM((int) (4.5 * 60)),
+        HARD(4 * 60);
         
-        private final float minutes;
+        private final int time;
         
-        Difficulty(float minutes) {
-            this.minutes = minutes;
+        Difficulty(int time) {
+            this.time = time;
         }
         
-        public float getMinutes() {
-            return minutes;
+        public int getTime() {
+            return time;
         }
         
         public String getDisplayName() {

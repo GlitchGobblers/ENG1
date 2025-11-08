@@ -132,7 +132,7 @@ public class MapManager implements Screen {
 
     @Override
     public void show() {
-        timer = new Timer(difficulty.getMinutes());
+        timer = new Timer(difficulty.getTime());
         timer.startTimer();
 
         layout = new GlyphLayout();
@@ -353,7 +353,7 @@ public class MapManager implements Screen {
         batch.end();
 
         // Trigger game over when timer hits zero
-        if (!gameOver && timer.getSeconds() <= 0) {
+        if (!gameOver && timer.getDuration() <= 0) {
             gameOver = true;
             if (pauseTable != null) pauseTable.setVisible(false);
             if (endTable != null) endTable.setVisible(true);

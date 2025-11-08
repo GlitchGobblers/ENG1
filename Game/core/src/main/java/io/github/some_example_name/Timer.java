@@ -7,17 +7,20 @@ import com.badlogic.gdx.utils.TimeUtils;
  * A simple timer for ensuring the player doesn't take too long.
  */
 public class Timer {
-    private int seconds;
+    private int duration;
+    private int elapsed;
     private Boolean running;
     private long start;
 
-    public Timer(float minutes) {
-        this.seconds = (int) (minutes * 60);
+    public Timer(int duration) {
+        this.duration = duration;
         this.running = false;
+        this.elapsed = 0;
     }
 
     public void startTimer() {
         start = TimeUtils.millis();
+        elapsed = 0;
         running = true;
     }
 
@@ -25,33 +28,45 @@ public class Timer {
      * Preserves remaining time, so resume continues from where it left off.
      */
     public void pauseTimer() {
-        this.seconds = getSeconds();
-        this.running = false;
+        if (running) {
+            elapsed += (int) (TimeUtils.timeSinceMillis(start) / 1000);
+            this.running = false;
+        }
     }
+
+    public void resumeTimer() {
+        if (!running) {
+            this.start = TimeUtils.millis();
+            this.running = true;
+        }
+    }
+
 
     public Boolean getRunning() {
         return running;
     }
 
+    public int getDuration() {
+        return duration;
+    }
+
     /**
-     * Skips the calculation if the timer is paused, as pausing the timer directly sets the number of seconds as of when
-     * it was paused. This is to avoid time after it was paused counting against it.
-     * @return the number of seconds left on the clock
+     *
+     * @return time elapsed, in seconds
      */
-    public int getSeconds() {
-        if (running == false) {
-            return seconds;
+    private int getElapsed() {
+        if (!running) {
+            return this.elapsed;
         }
 
-        int currentDuration = (int) (TimeUtils.timeSinceMillis(start) / 1000);
-        return seconds - currentDuration;
+        return this.elapsed + (int) (TimeUtils.timeSinceMillis(start) / 1000);
     }
 
     /**
      * @return a string to display in format MM:SS
      */
     public String displayTimer() {
-        int currentSeconds = getSeconds();
+        int currentSeconds = getDuration();
         if (currentSeconds < 0) {
             currentSeconds = 0;
         }
