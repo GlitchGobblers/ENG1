@@ -13,6 +13,11 @@ public class Timer {
         this.running = false;
     }
 
+    public Timer(float minutes) {
+        this.seconds = Math.round(minutes * 60);
+        this.running = false;
+    }
+
     public void startTimer() {
         start = TimeUtils.millis();
         running = true;
@@ -20,6 +25,11 @@ public class Timer {
 
     public void restartTimer(int minutes) {
         this.seconds = minutes * 60;
+        startTimer();
+    }
+
+    public void restartTimer(float minutes) {
+        this.seconds = Math.round(minutes * 60);
         startTimer();
     }
     public void stopTimer() {

@@ -54,6 +54,7 @@ public class MapManager implements Screen {
     private final BitmapFont font;
     private GlyphLayout layout;
     private Texture interact;
+    private int score = 0;
 
     // Pause state/UI
     private boolean paused = false;
@@ -72,9 +73,15 @@ public class MapManager implements Screen {
     private boolean iskeyActive = true;
     private int eventCount = 0; //variable to keep counts how many times the key is collected
     private float unitScale = 1/16f;
+    private SplashScreen.Difficulty difficulty = SplashScreen.Difficulty.EASY; // Default difficulty
 
     // Temporary code so that it will show whichever tilemap is in the file location, will have to move to render once things are moving
     public MapManager(Game game, String mapFile) {
+        this(game, mapFile, SplashScreen.Difficulty.EASY);
+    }
+    
+    public MapManager(Game game, String mapFile, SplashScreen.Difficulty difficulty) {
+        this.difficulty = difficulty;
         this.game = game;
         this.mapFilePath = mapFile;
 
@@ -117,7 +124,7 @@ public class MapManager implements Screen {
 
     @Override
     public void show() {
-        timer = new Timer(1);
+        timer = new Timer(difficulty.getMinutes());
         timer.startTimer();
 
         layout = new GlyphLayout();
@@ -206,7 +213,7 @@ public class MapManager implements Screen {
         restartBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
             @Override
             public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
-                game.setScreen(new MapManager(game, mapFilePath));
+                game.setScreen(new MapManager(game, mapFilePath, difficulty));
             }
         });
 
@@ -250,7 +257,7 @@ public class MapManager implements Screen {
         restartBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
             @Override
             public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
-                game.setScreen(new MapManager(game, mapFilePath));
+                game.setScreen(new MapManager(game, mapFilePath, difficulty));
             }
         });
 
@@ -310,7 +317,16 @@ public class MapManager implements Screen {
         // appears in top right corner
         float x = Gdx.graphics.getWidth() - layout.width - 20;
         float y = Gdx.graphics.getHeight() - 20;
+        font.setColor(Color.BLACK);
         font.draw(batch, timerText, x, y);
+        
+        // Display score in top left corner
+        String scoreText = "Score: " + score;
+        layout.setText(font, scoreText);
+        float scoreX = 20;
+        float scoreY = Gdx.graphics.getHeight() - 20;
+        font.setColor(new Color(0.4f, 0.0f, 0.4f, 1.0f)); // Dark purple
+        font.draw(batch, scoreText, scoreX, scoreY);
         batch.end();
 
         // Trigger game over when timer hits zero
@@ -414,7 +430,7 @@ public class MapManager implements Screen {
         int col = (int) floor(x);
         int row = (int) floor(y);
 
-        if (col < 0 || row < 0 || col >= winLayer.getWidth() || row >= winLayer.getHeight()) {
+        if (winLayer == null || col < 0 || row < 0 || col >= winLayer.getWidth() || row >= winLayer.getHeight()) {
             return false;
         }
 
@@ -456,6 +472,11 @@ public class MapManager implements Screen {
         boolean left = Gdx.input.isKeyPressed(Input.Keys.A);
         boolean up = Gdx.input.isKeyPressed(Input.Keys.W);
         boolean down = Gdx.input.isKeyPressed(Input.Keys.S);
+
+        // TEST CODE: Increase score by 10 when W is pressed (remove after testing)
+        if (Gdx.input.isKeyJustPressed(Input.Keys.W)) {
+            modifyScore(10);
+        }
 
         if (right) { NewPositionX += speed * delta; }
         if (left) { NewPositionX -= speed * delta; }
@@ -506,5 +527,15 @@ public class MapManager implements Screen {
         }
 
         objectCheck(CurrentPosition);
+    }
+
+    /**
+     * Modifies the score by the specified amount.
+     * Can be positive (to increase) or negative (to decrease) the score.
+     * 
+     * @param amount The amount to add to the score (can be positive or negative)
+     */
+    public void modifyScore(int amount) {
+        score += amount;
     }
 }
