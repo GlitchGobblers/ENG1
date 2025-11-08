@@ -76,6 +76,7 @@ public class MapManager implements Screen {
     private boolean iskeyActive = true;
     private int eventCount = 0; //variable to keep counts how many times the key is collected
     private float unitScale = 1/16f;
+    private TiledMap map;
     private SplashScreen.Difficulty difficulty = SplashScreen.Difficulty.EASY; // Default difficulty
 
     // Temporary code so that it will show whichever tilemap is in the file location, will have to move to render once things are moving
@@ -89,7 +90,7 @@ public class MapManager implements Screen {
         this.mapFilePath = mapFile;
 
         // this file is a temporary one to see if the renderer is working, it's not our final one
-        TiledMap map = new TmxMapLoader().load(mapFile);
+        map = new TmxMapLoader().load(mapFile);
 
         // out of all layers this is safe layer which the player can move on it.
         this.roadLayer = (TiledMapTileLayer) map.getLayers().get("Road");
@@ -477,12 +478,18 @@ public class MapManager implements Screen {
                 batch.begin();
                 batch.draw(interact, CurrentPosition.x*20, (CurrentPosition.y+2 )*20);
                 batch.end();
+                if (ObjectProperties.get("Hidden") != null){
+                    String change = EM.event(i, player);
+                    if (change != null) {
+                        map.getLayers().get(change).setVisible(true);
+                    }
+                }
                 if (Gdx.input.isKeyPressed(Input.Keys.E)) {
                     String change = EM.event(i, player);
+                    }
                 }
             }
         }
-    }
 
     public void inputHandler() {
         float delta = Gdx.graphics.getDeltaTime();
