@@ -28,6 +28,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 import com.badlogic.gdx.math.Rectangle;
@@ -42,6 +43,7 @@ public class MapManager implements Screen {
     private OrthogonalTiledMapRenderer renderer;
     private Player player;
     private OrthographicCamera camera;
+    private FitViewport gameViewport;
     private OrthographicCamera timerCamera;
     private TiledMapTileLayer roadLayer;
     private TiledMapTileLayer winLayer;
@@ -102,6 +104,7 @@ public class MapManager implements Screen {
 
         this.camera = new OrthographicCamera();
 
+        this.gameViewport = new FitViewport(60, 40, camera);
         // temporary size to test, once developed slightly the user may be able to select the size of the game window in the main menu
         camera.setToOrtho(false, 60, 40);
         this.renderer.setView(camera);
@@ -294,6 +297,10 @@ public class MapManager implements Screen {
     public void render(float v) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        
+        // Apply the viewport (important for proper rendering with black bars)
+        gameViewport.apply();
+        
         this.renderer.setView(camera);
         this.renderer.render();
 
@@ -355,6 +362,10 @@ public class MapManager implements Screen {
 
     @Override
     public void resize(int i, int i1) {
+        // Update the game viewport to maintain aspect ratio
+        if (gameViewport != null) {
+            gameViewport.update(i, i1, true);
+        }
         if (uiStage != null) {
             uiStage.getViewport().update(i, i1, true);
         }
