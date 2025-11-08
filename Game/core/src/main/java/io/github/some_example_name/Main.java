@@ -17,6 +17,13 @@ public class Main extends Game {
 
     @Override
     public void create() {
-        setScreen(new SplashScreen(this));
+        try {
+            setScreen(new SplashScreen(this));
+        } catch (Exception e) {
+            // This will print the actual game-crashing error to the console
+            e.printStackTrace();
+            // Exit the application gracefully
+            Gdx.app.exit();
+        }
     }
 }

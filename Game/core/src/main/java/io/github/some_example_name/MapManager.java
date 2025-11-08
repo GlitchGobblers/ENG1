@@ -31,8 +31,6 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.math.Rectangle;
 
 
 //Main game class, will manage the camera and will store information about the map
@@ -85,7 +83,7 @@ public class MapManager implements Screen {
         this.game = game;
         this.mapFilePath = mapFile;
 
-        // this file is a temporary one to see if the renderer is working, its not our final one
+        // this file is a temporary one to see if the renderer is working, it's not our final one
         TiledMap map = new TmxMapLoader().load(mapFile);
 
         // out of all layers this is safe layer which the player can move on it.
@@ -97,7 +95,7 @@ public class MapManager implements Screen {
         // Gets all the interactables on the object layer
         interactables = map.getLayers().get("Interactables").getObjects();
 
-        // Creates a Event manager which handles getting information about the events on the map
+        // Creates an EventManager which handles getting information about the events on the map
         EM = new EventManager(interactables);
 
         this.renderer = new OrthogonalTiledMapRenderer(map, unitScale);
@@ -415,10 +413,10 @@ public class MapManager implements Screen {
         float h = player.getHeight();
         float eps = 0.01f;
 
-        boolean bl = IsVictoryArea(x, y);
-        boolean br = IsVictoryArea(x + w - eps, y);
-        boolean tl = IsVictoryArea(x, y + h - eps);
-        boolean tr = IsVictoryArea(x + w - eps, y + h - eps);
+        boolean bl = isVictoryArea(x, y);
+        boolean br = isVictoryArea(x + w - eps, y);
+        boolean tl = isVictoryArea(x, y + h - eps);
+        boolean tr = isVictoryArea(x + w - eps, y + h - eps);
 
         return bl || br || tl || tr;
     }
@@ -436,7 +434,7 @@ public class MapManager implements Screen {
         //the getcell() will returns null if there is no tile on the roadlayer at this position
     }
 
-    public boolean IsVictoryArea(float x, float y) {
+    public boolean isVictoryArea(float x, float y) {
         int col = (int) floor(x);
         int row = (int) floor(y);
 
