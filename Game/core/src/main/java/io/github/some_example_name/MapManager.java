@@ -82,7 +82,7 @@ public class MapManager implements Screen {
     public MapManager(Game game, String mapFile) {
         this(game, mapFile, SplashScreen.Difficulty.EASY);
     }
-    
+
     public MapManager(Game game, String mapFile, SplashScreen.Difficulty difficulty) {
         this.difficulty = difficulty;
         this.game = game;
@@ -305,10 +305,10 @@ public class MapManager implements Screen {
     public void render(float v) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        
+
         // Apply the viewport (important for proper rendering with black bars)
         gameViewport.apply();
-        
+
         this.renderer.setView(camera);
         this.renderer.render();
 
@@ -342,7 +342,7 @@ public class MapManager implements Screen {
         float y = Gdx.graphics.getHeight() - 20;
         font.setColor(Color.BLACK);
         font.draw(batch, timerText, x, y);
-        
+
         // Display score in top left corner
         String scoreText = "Score: " + score;
         layout.setText(font, scoreText);
@@ -478,10 +478,7 @@ public class MapManager implements Screen {
                 batch.draw(interact, CurrentPosition.x*20, (CurrentPosition.y+2 )*20);
                 batch.end();
                 if (Gdx.input.isKeyPressed(Input.Keys.E)) {
-                    String change = EM.event(i);
-                    if (Float.parseFloat(change) <= 10) {
-                        player.setSpeed((float) Integer.parseInt(change));
-                    }
+                    String change = EM.event(i, player);
                 }
             }
         }
@@ -561,7 +558,7 @@ public class MapManager implements Screen {
     /**
      * Modifies the score by the specified amount.
      * Can be positive (to increase) or negative (to decrease) the score.
-     * 
+     *
      * @param amount The amount to add to the score (can be positive or negative)
      */
     public void modifyScore(int amount) {

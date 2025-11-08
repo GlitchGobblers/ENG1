@@ -79,6 +79,9 @@ public class Player {
             walkAnimations[dir].setPlayMode(Animation.PlayMode.LOOP);
         }
     }
+    public void changeSpeed(float change){
+        speed = speed * change;
+    }
 
     public float getWidth() {
         return width;

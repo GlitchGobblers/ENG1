@@ -11,7 +11,7 @@ public class EventManager {
     public EventManager(MapObjects Interactables) {
         this.Interactables = Interactables;
     }
-    public String event(int Index){
+    public String event(int Index, Player player){
         MapObject Event = Interactables.get(Index);
         MapProperties EventProperties = Event.getProperties();
         if (EventProperties.get("Map") != null) {
@@ -19,7 +19,8 @@ public class EventManager {
         }
         if (EventProperties.get("Event") != null){
             if (Objects.equals((String) EventProperties.get("Event"), "StatChange")){
-                return (String)EventProperties.get("StatChange");
+                float statchange = Float.parseFloat((String)EventProperties.get("StatChange"));
+                player.changeSpeed(statchange);
             }
             //uncomment when victory screen is implemented
             //if(Objects.equals((String) EventProperties.get("Event"),  "Win")){
