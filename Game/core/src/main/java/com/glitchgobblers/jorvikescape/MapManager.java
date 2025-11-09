@@ -508,16 +508,23 @@ public class MapManager implements Screen {
         }
 
         Player.Direction dir = null;
+        // non-exclusive because otherwise we wouldn't be able to go multiple directions at once
         if (goingRight) {
             dir = Player.Direction.RIGHT;
             newPositionX += speed * delta;
-        } else if (goingLeft) {
+        }
+
+        if (goingLeft) {
             dir = Player.Direction.LEFT;
             newPositionX -= speed * delta;
-        } else if (goingUp) {
+        }
+
+        if (goingUp) {
             dir = Player.Direction.UP;
             newPositionY += speed * delta;
-        } else if (goingDown) {
+        }
+
+        if (goingDown) {
             dir = Player.Direction.DOWN;
             newPositionY -= speed * delta;
         }
