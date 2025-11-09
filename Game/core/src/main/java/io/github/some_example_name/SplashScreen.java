@@ -56,6 +56,7 @@ public class SplashScreen implements Screen {
     private Difficulty currentDifficulty = Difficulty.EASY;
     private TextButton difficultyButton;
     private Button playButton;
+    private TextButton howToPlayButton;
     
     // Font for title
     private BitmapFont titleFont;
@@ -103,12 +104,40 @@ public class SplashScreen implements Screen {
         
         // Title text will be drawn separately, so add spacing for it
         mainTable.add().expandY().row();
+
+        // How to Play button
+        TextButton.TextButtonStyle howToPlayStyle = new TextButton.TextButtonStyle(skin.get(TextButton.TextButtonStyle.class));
+        howToPlayStyle.fontColor = Color.WHITE;
+
+        // Set dark green color with 75% opacity
+        Color greenColor = new Color(0.1f, 0.3f, 0.1f, 0.75f); // Dark Green color
+        Color greenBorderColor = new Color(greenColor.r * 0.75f, greenColor.g * 0.75f, greenColor.b * 0.75f, 0.75f);
+        Color greenPressed = new Color(greenColor.r * 0.7f, greenColor.g * 0.7f, greenColor.b * 0.7f, 0.75f);
+        Color greenPressedBorder = new Color(greenPressed.r * 0.75f, greenPressed.g * 0.75f, greenPressed.b * 0.75f, 0.75f);
+        Color greenOver = new Color(greenColor.r * 0.9f, greenColor.g * 0.9f, greenColor.b * 0.9f, 0.75f);
+        Color greenOverBorder = new Color(greenOver.r * 0.75f, greenOver.g * 0.75f, greenOver.b * 0.75f, 0.75f);
+        howToPlayStyle.up = createColoredDrawableWithBorder(greenColor, greenBorderColor, 400, 70, 3);
+        howToPlayStyle.down = createColoredDrawableWithBorder(greenPressed, greenPressedBorder, 400, 70, 3);
+        howToPlayStyle.over = createColoredDrawableWithBorder(greenOver, greenOverBorder, 400, 70, 3);
+
+        howToPlayButton = new TextButton("How To Play", howToPlayStyle);
+        howToPlayButton.getLabel().setFontScale(1.8f);
+
+        howToPlayButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.setScreen(new HowToPlayScreen(game));
+            }
+        });
+
+        // Add the new how to play button above the difficulty selector
+        mainTable.add(howToPlayButton).size(400, 70).padBottom(20).row();
         
-        // Difficulty button - brown/map colored, 75% opacity
+        // Difficulty button - brown coloured, 75% opacity
         TextButton.TextButtonStyle difficultyStyle = new TextButton.TextButtonStyle(skin.get(TextButton.TextButtonStyle.class));
         difficultyStyle.fontColor = Color.WHITE;
         
-        // Set brown/map color with 75% opacity
+        // Set brown colour with 75% opacity
         Color brownColor = new Color(0.545f, 0.412f, 0.294f, 0.75f); // Brown map color
         Color brownBorderColor = new Color(brownColor.r * 0.75f, brownColor.g * 0.75f, brownColor.b * 0.75f, 0.75f); // Slightly darker border
         Color brownPressed = new Color(brownColor.r * 0.7f, brownColor.g * 0.7f, brownColor.b * 0.7f, 0.75f);
@@ -129,11 +158,11 @@ public class SplashScreen implements Screen {
             }
         });
         
-        mainTable.add(difficultyButton).size(400, 70).padBottom(130).row(); // Increased padding to move play button lower
+        mainTable.add(difficultyButton).size(400, 70).padBottom(20).row();
         
         // Play button - stone grey, 75% opacity, with green play triangle
         playButton = createPlayButton();
-        mainTable.add(playButton).padBottom(30).row();
+        mainTable.add(playButton).padBottom(60).row();
         
         mainTable.add().expandY();
     }
