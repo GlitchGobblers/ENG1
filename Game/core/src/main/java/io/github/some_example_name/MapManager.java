@@ -24,11 +24,13 @@ import com.badlogic.gdx.audio.Music;
 
 import static java.lang.Math.floor;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -180,23 +182,23 @@ public class MapManager implements Screen {
 
         pauseTable.setVisible(false);
 
-        resumeBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
+        resumeBtn.addListener(new ClickListener() {
             @Override
-            public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
+            public void clicked(InputEvent event, float x, float y) {
                 togglePause();
             }
         });
 
-        restartBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
+        restartBtn.addListener(new ClickListener() {
             @Override
-            public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
+            public void clicked(InputEvent event, float x, float y) {
                 game.setScreen(new SplashScreen(game));
             }
         });
 
-        quitBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
+        quitBtn.addListener(new ClickListener() {
             @Override
-            public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
+            public void clicked(InputEvent event, float x, float y) {
                 Gdx.app.exit(); // Properly exit the application
             }
         });
@@ -231,16 +233,16 @@ public class MapManager implements Screen {
 
         endTable.setVisible(false);
 
-        restartBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
+        restartBtn.addListener(new ClickListener() {
             @Override
-            public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
+            public void clicked(InputEvent event, float x, float y) {
                 game.setScreen(new MapManager(game, mapFilePath, difficulty));
             }
         });
 
-        quitBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
+        quitBtn.addListener(new ClickListener() {
             @Override
-            public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
+            public void clicked(InputEvent event, float x, float y) {
                 Gdx.app.exit();
             }
         });
@@ -275,16 +277,16 @@ public class MapManager implements Screen {
 
         passTable.setVisible(false);
 
-        restartBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
+        restartBtn.addListener(new ClickListener() {
             @Override
-            public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
+            public void clicked(InputEvent event, float x, float y) {
                 game.setScreen(new MapManager(game, mapFilePath, difficulty));
             }
         });
 
-        quitBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
+        quitBtn.addListener(new ClickListener() {
             @Override
-            public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
+            public void clicked(InputEvent event, float x, float y) {
                 Gdx.app.exit();
             }
         });
@@ -426,8 +428,9 @@ public class MapManager implements Screen {
         if (isBarrierActive && barrierRect != null) {
             if (playerRect.overlaps(barrierRect)) return false;
         }
-        if (EM.getBarriers()){
-            if(playerRect.overlaps(EM.getBarrierProperties(0))) return false;
+
+        for (int i = 0; i<EM.Barriers.getCount(); i++){
+             if (playerRect.overlaps(EM.getBarrierProperties(i)) && EM.isBarrier(i))  return false;
         }
 
         return true;
@@ -460,7 +463,12 @@ public class MapManager implements Screen {
                 if (ObjectProperties.get("Hidden") != null){
                     String change = EM.event(i, player);
                     if (change != null) {
-                        map.getLayers().get(change).setVisible(true);
+                        if(change.equals("Hidden1")) {
+                            map.getLayers().get(change).setVisible(true);
+                        }
+                        if(change.equals("Hidden2")&& EM.getStone()){
+                            map.getLayers().get(change).setVisible(false);
+                        }
                     }
                 }
                 if (Gdx.input.isKeyPressed(Input.Keys.E)) {
