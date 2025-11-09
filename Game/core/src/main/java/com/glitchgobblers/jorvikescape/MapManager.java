@@ -37,6 +37,8 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 import com.badlogic.gdx.math.Rectangle;
 
+import java.util.Objects;
+
 
 /**
  * Main game class; manages the camera and stores information about the map
@@ -45,6 +47,7 @@ public class MapManager implements Screen {
     private final Game game;
     private final OrthogonalTiledMapRenderer renderer;
     private final Player player;
+    private final TiledMap map;
     private final OrthographicCamera camera;
     private final FitViewport gameViewport;
     private OrthographicCamera timerCamera;
@@ -96,7 +99,7 @@ public class MapManager implements Screen {
         this.game = game;
 
         // this file is temporary to see if the renderer is working, it's not our final one
-        TiledMap map = new TmxMapLoader().load(mapFile);
+        map = new TmxMapLoader().load(mapFile);
 
         // this is a safe layer which the player can move on
         this.roadLayer = (TiledMapTileLayer) map.getLayers().get("Road");
@@ -361,7 +364,7 @@ public class MapManager implements Screen {
         font.draw(batch, timerText, x, y);
 
         // Display score in the top left corner
-        int score = 0;
+        int score = calcScore();
         String scoreText = "Score: " + score;
         layout.setText(font, scoreText);
 
@@ -438,6 +441,9 @@ public class MapManager implements Screen {
      * @param y the targeted y coordinate
      * @return whether a player will collide with an object if they move to the specified position
      */
+    private int calcScore(){
+        return (EM.getScore()*100)+ timer.getTimeLeft();
+    }
     public boolean isTileSafe(float x, float y) {
         float playerWidth = player.getWidth();
         float playerHeight = player.getHeight();
@@ -455,12 +461,17 @@ public class MapManager implements Screen {
         }
 
         // player must not overlap the barrier if it's active
+        Rectangle playerRect = new Rectangle(x, y, playerWidth, playerHeight);
         if (isBarrierActive && barrierRect != null) {
-            Rectangle playerRect = new Rectangle(x, y, playerWidth, playerHeight);
             return !playerRect.overlaps(barrierRect);
-        } else {
-            return true;
         }
+        for (int i = 0; i<EM.barriers.getCount(); i++){
+            if (playerRect.overlaps(EM.getBarrierProperties(i)) && EM.isBarrier(i))  {
+                return false;
+            }
+        }
+        return true;
+
     }
 
     private boolean playerOnWinTile(float x, float y) {
@@ -526,9 +537,19 @@ public class MapManager implements Screen {
                     // Only try to parse if change is not null and is a valid number
                     if (change != null) {
                         try {
-                            float value = Float.parseFloat(change);
-                            if (value <= 10) {
-                                player.setSpeed(value);
+                            if (Objects.equals(change, "Win")) {
+                                gameOver = true;
+                                if (pauseTable != null) pauseTable.setVisible(false);
+                                if (endTable != null) endTable.setVisible(false);   // hide fail table if it exists
+                                if (passTable != null) passTable.setVisible(true);  // SHOW the pass table
+                                if (timer != null && timer.getRunning()) timer.pauseTimer();
+                                Gdx.input.setInputProcessor(uiStage);
+                            }
+                            if(change.equals("Hidden1")) {
+                                map.getLayers().get(change).setVisible(true);
+                            }
+                            if(change.equals("Hidden2")&& EM.getStone()){
+                                map.getLayers().get(change).setVisible(false);
                             }
                         } catch (NumberFormatException e) {
                             // change is not a number (e.g., "Hidden1", "Hidden2", "Win")
