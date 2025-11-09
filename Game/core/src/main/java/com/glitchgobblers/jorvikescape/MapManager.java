@@ -98,7 +98,7 @@ public class MapManager implements Screen {
         interactables = map.getLayers().get("Interactables").getObjects();
 
         // Creates an EventManager which handles getting information about the events on the map
-        EM = new EventManager(interactables);
+        EM = new EventManager(interactables, map.getLayers().get("Barriers").getObjects());
 
         // Determine visual size based on frame (1 world unit = 16 pixels)
         float unitScale = 1 / 16f;
@@ -460,7 +460,7 @@ public class MapManager implements Screen {
 
                 // I don't know what this does, I think it's event-related?
                 if (Gdx.input.isKeyPressed(Input.Keys.E)) {
-                    String change = EM.event(i);
+                    String change = EM.event(i, player);
                     if (Float.parseFloat(change) <= 10) {
                         player.setSpeed((float) Integer.parseInt(change));
                     }

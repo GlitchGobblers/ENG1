@@ -1,4 +1,4 @@
-package io.github.some_example_name;
+package com.glitchgobblers.jorvikescape;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
@@ -18,7 +18,9 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
-// A simple screen to display game instructions and setting summary
+/**
+ * A simple screen to display game instructions and setting summary.
+ */
 public class HowToPlayScreen implements Screen {
 
     private final Game game;
@@ -30,12 +32,6 @@ public class HowToPlayScreen implements Screen {
     private BitmapFont titleFont;
     private BitmapFont bodyFont;
     private GlyphLayout layout;
-
-    // Text content
-    private final String titleText = "How To Play";
-    private final String settingText = "You have travelled back through time to old England where The University of York has been replaced by Jorvik University! The campus you once knew and loved is no longer. Instead, you must navigate the Viking-esque landscape between different University buildings, solving puzzles and occasionally coming across advantageous or even detrimental events. Time is running out. Will you find your way to the submission room before the deadline hits? Can you escape the university with your degree in hand?";
-    private final String controlsText = "Use the W, A, S, D Keys to move your character around the map. Interact with objects by pressing the E key when you see the interaction prompt. Try to maximise your score while keeping an eye on the timer at the top right of the screen - don't let it run out!\nDifficulties: Easy: 5 minutes, Medium: 4.5 minutes, Hard: 4 minutes";
-
 
     public HowToPlayScreen(Game game) {
         this.game = game;
@@ -72,7 +68,8 @@ public class HowToPlayScreen implements Screen {
     private void buildUI() {
         Table mainTable = new Table();
         mainTable.setFillParent(true);
-        mainTable.bottom().padBottom(40); // Align to bottom with padding
+        // Align to the bottom with padding
+        mainTable.bottom().padBottom(40);
         stage.addActor(mainTable);
 
         // Create a back button to return to the splash screen
@@ -96,22 +93,33 @@ public class HowToPlayScreen implements Screen {
 
         batch.begin();
 
-        // Draw the title in the top center
+        // Draw the title in the top centre
+        // Text content
+        String titleText = "How To Play";
         layout.setText(titleFont, titleText);
+
         float titleX = (Gdx.graphics.getWidth() - layout.width) / 2;
         float titleY = Gdx.graphics.getHeight() - 80;
+
         titleFont.draw(batch, layout, titleX, titleY);
 
         // Draw the setting summary below the title
         float textWidth = Gdx.graphics.getWidth() * 0.8f; // Text block is 80% of screen width
+
+        String settingText = "You have travelled back through time to old England where The University of York has been replaced by Jorvik University! The campus you once knew and loved is no longer. Instead, you must navigate the Viking-esque landscape between different University buildings, solving puzzles and occasionally coming across advantageous or even detrimental events. Time is running out. Will you find your way to the submission room before the deadline hits? Can you escape the university with your degree in hand?";
         layout.setText(bodyFont, settingText, Color.WHITE, textWidth, Align.center, true);
+
         float settingX = (Gdx.graphics.getWidth() - textWidth) / 2;
         float settingY = titleY - 100;
+
         bodyFont.draw(batch, layout, settingX, settingY);
         
-        // Draw the controls text below the setting summary
+        // Draw the controls' text below the setting summary
+        String controlsText = "Use the W, A, S, D Keys to move your character around the map. Interact with objects by pressing the E key when you see the interaction prompt. Try to maximise your score while keeping an eye on the timer at the top right of the screen - don't let it run out!\nDifficulties: Easy: 5 minutes, Medium: 4.5 minutes, Hard: 4 minutes";
         layout.setText(bodyFont, controlsText, Color.WHITE, textWidth, Align.center, true);
+
         float controlsY = settingY - layout.height - 50; // Add padding between sections
+
         bodyFont.draw(batch, layout, settingX, controlsY);
 
         batch.end();
@@ -123,7 +131,7 @@ public class HowToPlayScreen implements Screen {
 
     @Override
     public void resize(int width, int height) {
-        // If the window is minimized, width and height are 0 which causes problems.
+        // If the window is minimised, width and height are 0, which causes problems.
         // In that case, we don't resize anything, and wait for the window to be a normal size before updating.
         if (width <= 0 || height <= 0) return;
         stage.getViewport().update(width, height, true);
@@ -131,12 +139,12 @@ public class HowToPlayScreen implements Screen {
 
     @Override
     public void pause() {
-        // Invoked when application is paused.
+        // Invoked when the application is paused.
     }
 
     @Override
     public void resume() {
-        // Invoked when application is resumed.
+        // Invoked when the application is resumed.
     }
 
     @Override

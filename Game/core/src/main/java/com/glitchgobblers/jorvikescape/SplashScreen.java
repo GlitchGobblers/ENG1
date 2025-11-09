@@ -57,7 +57,6 @@ public class SplashScreen implements Screen {
     private Difficulty currentDifficulty;
     private TextButton difficultyButton;
     private Button playButton;
-    private TextButton howToPlayButton;
 
     // Font for title
     private BitmapFont titleFont;
@@ -129,7 +128,7 @@ public class SplashScreen implements Screen {
         howToPlayStyle.down = createColoredDrawableWithBorder(greenPressed, greenPressedBorder, 400, 70, 3);
         howToPlayStyle.over = createColoredDrawableWithBorder(greenOver, greenOverBorder, 400, 70, 3);
 
-        howToPlayButton = new TextButton("How To Play", howToPlayStyle);
+        TextButton howToPlayButton = new TextButton("How To Play", howToPlayStyle);
         howToPlayButton.getLabel().setFontScale(1.8f);
 
         howToPlayButton.addListener(new ClickListener() {
