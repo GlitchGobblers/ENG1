@@ -154,13 +154,13 @@ public class MapManager implements Screen {
         passTable = buildUI("You solved the puzzles and ESCAPED THE UNI!", new Color(1f, 0.84f, 0f, 1f));
     }
 
-    private Table buildUI(String labelTitle, Color titleColour) {
+    private Table buildUI(String mainTitle, Color titleColour) {
         Table table = new Table(uiSkin);
         table.setFillParent(true);
         table.defaults().pad(10);
         uiStage.addActor(table);
 
-        Label title = new Label(labelTitle, uiSkin);
+        Label title = new Label(mainTitle, uiSkin);
         title.setFontScale(3.6f);
         title.setAlignment(Align.center);
         title.setColor(titleColour);
@@ -170,7 +170,7 @@ public class MapManager implements Screen {
         window.add(title).center().padBottom(40).row();
 
         // only for the pause screen do we have a resume button
-        if (labelTitle.equals("Pause")) {
+        if (mainTitle.equals("Pause")) {
             TextButton resumeBtn = new TextButton("Resume", uiSkin);
             resumeBtn.getLabel().setFontScale(3.0f); // 3x larger
 
@@ -217,16 +217,33 @@ public class MapManager implements Screen {
     }
 
     private void togglePause() {
+        // switches the state of whether it is currently paused
         paused = !paused;
+
         if (paused) {
-            if (timer != null) timer.pauseTimer();
-            if (pauseTable != null) pauseTable.setVisible(true);
-            if (runningSound != null && runningSound.isPlaying()) runningSound.pause();
+            // assuming the timer exists, pause it
+            if (timer != null) {
+                timer.pauseTimer();
+            }
+
+            // pauses the running sound, if it exists and is running
+            if (runningSound != null && runningSound.isPlaying()) {
+                runningSound.pause();
+            }
+
             Gdx.input.setInputProcessor(uiStage);
         } else {
-            if (timer != null) timer.startTimer();
-            if (pauseTable != null) pauseTable.setVisible(false);
+            // assuming the timer exists, start it
+            if (timer != null) {
+                timer.startTimer();
+            }
+
             Gdx.input.setInputProcessor(null);
+        }
+
+        // assuming the pause table exists, show it if we are paused
+        if (pauseTable != null) {
+            pauseTable.setVisible(paused);
         }
     }
 
