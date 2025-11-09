@@ -100,6 +100,7 @@ public class MapManager implements Screen {
         // Creates an EventManager which handles getting information about the events on the map
         EM = new EventManager(interactables);
 
+        // Determine visual size based on frame (1 world unit = 16 pixels)
         float unitScale = 1 / 16f;
         this.renderer = new OrthogonalTiledMapRenderer(map, unitScale);
 
@@ -110,7 +111,7 @@ public class MapManager implements Screen {
         this.renderer.setView(camera);
 
         this.batch = new SpriteBatch();
-        player = new Player(new Vector2(9.75f, 3));
+        player = new Player(new Vector2(9.75f, 3), unitScale);
         interact = new Texture("Art/Interact.png");
 
         // place the barrier on the map
