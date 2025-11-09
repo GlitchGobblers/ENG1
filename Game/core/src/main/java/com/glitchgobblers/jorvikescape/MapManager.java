@@ -86,7 +86,7 @@ public class MapManager implements Screen {
     private int eventCount = 0;
 
     private final SplashScreen.Difficulty difficulty;
-    
+
     // Add debug rendering field
     private ShapeRenderer debugRenderer;
     private boolean showHitboxes = false;
@@ -263,10 +263,10 @@ public class MapManager implements Screen {
     public void render(float v) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        
+
         // Apply the viewport (important for proper rendering with black bars)
         gameViewport.apply();
-        
+
         this.renderer.setView(camera);
         this.renderer.render();
 
@@ -302,10 +302,10 @@ public class MapManager implements Screen {
         if (iskeyActive && keyTexture != null) {
             batch.draw(keyTexture, keyRect.x, keyRect.y, keyRect.width, keyRect.height);
         }
-        
+
         // Draw interaction prompt if needed
         if (showInteractionPrompt) {
-            batch.draw(interact, interactionPromptPosition.x, interactionPromptPosition.y);
+            batch.draw(interact, interactionPromptPosition.x, interactionPromptPosition.y, 1, 1);
         }
 
         batch.end();
@@ -359,7 +359,7 @@ public class MapManager implements Screen {
         float y = Gdx.graphics.getHeight() - 20;
         font.setColor(Color.BLACK);
         font.draw(batch, timerText, x, y);
-        
+
         // Display score in the top left corner
         int score = 0;
         String scoreText = "Score: " + score;
@@ -505,7 +505,7 @@ public class MapManager implements Screen {
 
     public void objectCheck(Vector2 currentPosition) {
         showInteractionPrompt = false;
-        
+
         for (int i = 0; i < interactables.getCount(); i++) {
             MapObject Object = interactables.get(i);
 
@@ -522,7 +522,7 @@ public class MapManager implements Screen {
                 // Handle interaction when E is pressed
                 if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
                     String change = EM.event(i, player);
-                    
+
                     // Only try to parse if change is not null and is a valid number
                     if (change != null) {
                         try {
