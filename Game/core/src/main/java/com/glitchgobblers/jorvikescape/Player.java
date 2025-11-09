@@ -1,4 +1,4 @@
-package io.github.some_example_name;
+package com.glitchgobblers.jorvikescape;
 
 //class to store information about the player so that MapManager can draw the player
 

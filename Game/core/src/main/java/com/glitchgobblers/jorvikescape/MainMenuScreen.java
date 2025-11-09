@@ -1,12 +1,13 @@
-package io.github.some_example_name;
+package com.glitchgobblers.jorvikescape;
 
 import com.badlogic.gdx.Screen;
 
 /** First screen of the application. Displayed after the application is created. */
 public class MainMenuScreen implements Screen {
+
+
     @Override
     public void show() {
-        // Prepare your screen here.
     }
 
     @Override
@@ -16,7 +17,7 @@ public class MainMenuScreen implements Screen {
 
     @Override
     public void resize(int width, int height) {
-        // If the window is minimized on a desktop (LWJGL3) platform, width and height are 0, which causes problems.
+        // If the window is minimised on a desktop (LWJGL3) platform, width and height are 0, which causes problems.
         // In that case, we don't resize anything, and wait for the window to be a normal size before updating.
         if(width <= 0 || height <= 0) return;
 

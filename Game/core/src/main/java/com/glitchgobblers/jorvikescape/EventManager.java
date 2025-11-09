@@ -1,4 +1,4 @@
-package io.github.some_example_name;
+package com.glitchgobblers.jorvikescape;
 
 import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.maps.MapObjects;
