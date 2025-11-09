@@ -115,18 +115,18 @@ public class SplashScreen implements Screen {
         howToPlayStyle.fontColor = Color.WHITE;
 
         // Set the dark green colour with 75% opacity
-        Color greenColor = new Color(0.1f, 0.3f, 0.1f, 0.75f);
-        Color greenBorderColor = new Color(greenColor.r * 0.75f, greenColor.g * 0.75f, greenColor.b * 0.75f, 0.75f);
+        Color greenColour = new Color(0.1f, 0.3f, 0.1f, 0.75f);
+        Color greenBorderColour = new Color(greenColour.r * 0.75f, greenColour.g * 0.75f, greenColour.b * 0.75f, 0.75f);
 
-        Color greenPressed = new Color(greenColor.r * 0.7f, greenColor.g * 0.7f, greenColor.b * 0.7f, 0.75f);
+        Color greenPressed = new Color(greenColour.r * 0.7f, greenColour.g * 0.7f, greenColour.b * 0.7f, 0.75f);
         Color greenPressedBorder = new Color(greenPressed.r * 0.75f, greenPressed.g * 0.75f, greenPressed.b * 0.75f, 0.75f);
 
-        Color greenOver = new Color(greenColor.r * 0.9f, greenColor.g * 0.9f, greenColor.b * 0.9f, 0.75f);
+        Color greenOver = new Color(greenColour.r * 0.9f, greenColour.g * 0.9f, greenColour.b * 0.9f, 0.75f);
         Color greenOverBorder = new Color(greenOver.r * 0.75f, greenOver.g * 0.75f, greenOver.b * 0.75f, 0.75f);
 
-        howToPlayStyle.up = createColoredDrawableWithBorder(greenColor, greenBorderColor, 400, 70, 3);
-        howToPlayStyle.down = createColoredDrawableWithBorder(greenPressed, greenPressedBorder, 400, 70, 3);
-        howToPlayStyle.over = createColoredDrawableWithBorder(greenOver, greenOverBorder, 400, 70, 3);
+        howToPlayStyle.up = createColouredDrawableWithBorder(greenColour, greenBorderColour, 400, 70, 3);
+        howToPlayStyle.down = createColouredDrawableWithBorder(greenPressed, greenPressedBorder, 400, 70, 3);
+        howToPlayStyle.over = createColouredDrawableWithBorder(greenOver, greenOverBorder, 400, 70, 3);
 
         TextButton howToPlayButton = new TextButton("How To Play", howToPlayStyle);
         howToPlayButton.getLabel().setFontScale(1.8f);
@@ -146,16 +146,16 @@ public class SplashScreen implements Screen {
         difficultyStyle.fontColor = Color.WHITE;
 
         // Set brown/map colour with 75% opacity
-        Color brownColor = new Color(0.545f, 0.412f, 0.294f, 0.75f);
-        Color brownBorderColor = new Color(brownColor.r * 0.75f, brownColor.g * 0.75f, brownColor.b * 0.75f, 0.75f); // Slightly darker border
-        Color brownPressed = new Color(brownColor.r * 0.7f, brownColor.g * 0.7f, brownColor.b * 0.7f, 0.75f);
+        Color brownColour = new Color(0.545f, 0.412f, 0.294f, 0.75f);
+        Color brownBorderColour = new Color(brownColour.r * 0.75f, brownColour.g * 0.75f, brownColour.b * 0.75f, 0.75f); // Slightly darker border
+        Color brownPressed = new Color(brownColour.r * 0.7f, brownColour.g * 0.7f, brownColour.b * 0.7f, 0.75f);
         Color brownPressedBorder = new Color(brownPressed.r * 0.75f, brownPressed.g * 0.75f, brownPressed.b * 0.75f, 0.75f);
-        Color brownOver = new Color(brownColor.r * 0.9f, brownColor.g * 0.9f, brownColor.b * 0.9f, 0.75f);
+        Color brownOver = new Color(brownColour.r * 0.9f, brownColour.g * 0.9f, brownColour.b * 0.9f, 0.75f);
         Color brownOverBorder = new Color(brownOver.r * 0.75f, brownOver.g * 0.75f, brownOver.b * 0.75f, 0.75f);
 
-        difficultyStyle.up = createColoredDrawableWithBorder(brownColor, brownBorderColor, 400, 70, 3);
-        difficultyStyle.down = createColoredDrawableWithBorder(brownPressed, brownPressedBorder, 400, 70, 3);
-        difficultyStyle.over = createColoredDrawableWithBorder(brownOver, brownOverBorder, 400, 70, 3);
+        difficultyStyle.up = createColouredDrawableWithBorder(brownColour, brownBorderColour, 400, 70, 3);
+        difficultyStyle.down = createColouredDrawableWithBorder(brownPressed, brownPressedBorder, 400, 70, 3);
+        difficultyStyle.over = createColouredDrawableWithBorder(brownOver, brownOverBorder, 400, 70, 3);
 
         difficultyButton = new TextButton("Select Difficulty: Easy", difficultyStyle);
         difficultyButton.getLabel().setFontScale(1.8f);
@@ -190,9 +190,9 @@ public class SplashScreen implements Screen {
         Color overGrey = new Color(stoneGrey.r * 0.9f, stoneGrey.g * 0.9f, stoneGrey.b * 0.9f, 0.5f);
         Color overGreyBorder = new Color(overGrey.r * 0.75f, overGrey.g * 0.75f, overGrey.b * 0.75f, 0.5f);
 
-        playButtonStyle.up = createColoredDrawableWithBorder(stoneGrey, stoneGreyBorder, 100, 100, 3);
-        playButtonStyle.down = createColoredDrawableWithBorder(pressedGrey, pressedGreyBorder, 100, 100, 3);
-        playButtonStyle.over = createColoredDrawableWithBorder(overGrey, overGreyBorder, 100, 100, 3);
+        playButtonStyle.up = createColouredDrawableWithBorder(stoneGrey, stoneGreyBorder, 100, 100, 3);
+        playButtonStyle.down = createColouredDrawableWithBorder(pressedGrey, pressedGreyBorder, 100, 100, 3);
+        playButtonStyle.over = createColouredDrawableWithBorder(overGrey, overGreyBorder, 100, 100, 3);
 
         Button button = new Button(playButtonStyle);
         button.setSize(100, 100);
@@ -206,7 +206,7 @@ public class SplashScreen implements Screen {
         return button;
     }
 
-    private Drawable createColoredDrawableWithBorder(Color fillColor, Color borderColor, int width, int height, int borderWidth) {
+    private Drawable createColouredDrawableWithBorder(Color fillColor, Color borderColor, int width, int height, int borderWidth) {
         Pixmap pixmap = new Pixmap(width, height, Pixmap.Format.RGBA8888);
 
         // Draw border
