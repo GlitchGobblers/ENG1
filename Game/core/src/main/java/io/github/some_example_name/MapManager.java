@@ -145,7 +145,7 @@ public class MapManager implements Screen {
         uiSkin = new Skin(Gdx.files.internal("ui/uiskin.json"));
         buildPauseUI();
         buildFailGUI();
-        buildPassUI();
+        buildPassUI(score);
     }
 
     private void buildPauseUI() {
@@ -244,13 +244,13 @@ public class MapManager implements Screen {
         });
     }
 
-    private void buildPassUI() {
+    private void buildPassUI(int finalScore) {
         passTable = new Table(uiSkin);
         passTable.setFillParent(true);
         passTable.defaults().pad(10);
         uiStage.addActor(passTable);
 
-        Label passTitle = new Label("You solved the puzzles and ESCAPED THE UNI!", uiSkin);
+        Label passTitle = new Label("You solved the puzzles and ESCAPED THE UNI!\n You had a final score of: "+ score, uiSkin);
         passTitle.setFontScale(3.6f);
         passTitle.setAlignment(Align.center);
         passTitle.setColor(new Color(1f, 0.84f, 0f, 1f));
