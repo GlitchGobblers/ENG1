@@ -1,5 +1,7 @@
 package com.glitchgobblers.jorvikescape;
 
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
@@ -57,6 +59,10 @@ public class MapManager implements Screen {
     private final Texture interact;
     private final Music runningSound;
 
+    // Add a field to track if interaction prompt should be shown
+    private boolean showInteractionPrompt = false;
+    private final Vector2 interactionPromptPosition = new Vector2();
+
     // Pause state/UI
     private boolean paused = false;
     private boolean gameOver = false;
@@ -80,6 +86,10 @@ public class MapManager implements Screen {
     private int eventCount = 0;
 
     private final SplashScreen.Difficulty difficulty;
+    
+    // Add debug rendering field
+    private ShapeRenderer debugRenderer;
+    private boolean showHitboxes = false;
 
     public MapManager(Game game, String mapFile, SplashScreen.Difficulty difficulty) {
         this.difficulty = difficulty;
@@ -119,7 +129,7 @@ public class MapManager implements Screen {
         barrierTexture = new Texture("Art/Props/Crate_Medium_Closed.png");
 
         // place the key for the barrier on the map
-        keyRect = new Rectangle(10, 23, 2, 2);
+        keyRect = new Rectangle(3, 30, 2, 2);
         keyTexture = new Texture("Art/Characters/Main Character/Test Character2.png");
 
         // sets up font for text rendering of timer/score
@@ -143,6 +153,9 @@ public class MapManager implements Screen {
 
         timerCamera = new OrthographicCamera();
         timerCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
+        // Initialize debug renderer
+        debugRenderer = new ShapeRenderer();
 
         // UI for pause menu
         uiStage = new Stage(new ScreenViewport());
@@ -262,6 +275,12 @@ public class MapManager implements Screen {
             togglePause();
         }
 
+        // Toggle hitboxes with the H key
+        if (Gdx.input.isKeyJustPressed(Input.Keys.H)) {
+            showHitboxes = !showHitboxes;
+            System.out.println("Hitboxes " + (showHitboxes ? "enabled" : "disabled"));
+        }
+
         // Only process gameplay when not paused or game over
         if (!paused && !gameOver) {
             inputHandler();
@@ -283,8 +302,50 @@ public class MapManager implements Screen {
         if (iskeyActive && keyTexture != null) {
             batch.draw(keyTexture, keyRect.x, keyRect.y, keyRect.width, keyRect.height);
         }
+        
+        // Draw interaction prompt if needed
+        if (showInteractionPrompt) {
+            batch.draw(interact, interactionPromptPosition.x, interactionPromptPosition.y);
+        }
 
         batch.end();
+
+        // Draw hitboxes for debugging
+        if (showHitboxes) {
+            debugRenderer.setProjectionMatrix(camera.combined);
+            debugRenderer.begin(ShapeRenderer.ShapeType.Line);
+
+            // Player hitbox (green)
+            debugRenderer.setColor(0, 1, 0, 1);
+            Vector2 playerPos = player.getPlayerPosition();
+            debugRenderer.rect(playerPos.x, playerPos.y, player.getWidth(), player.getHeight());
+
+            // Barrier hitbox (red)
+            if (isBarrierActive && barrierRect != null) {
+                debugRenderer.setColor(1, 0, 0, 1);
+                debugRenderer.rect(barrierRect.x, barrierRect.y, barrierRect.width, barrierRect.height);
+            }
+
+            // Key hitbox (yellow)
+            if (iskeyActive && keyRect != null) {
+                debugRenderer.setColor(1, 1, 0, 1);
+                debugRenderer.rect(keyRect.x, keyRect.y, keyRect.width, keyRect.height);
+            }
+
+            // Interactable objects hitboxes (cyan)
+            debugRenderer.setColor(0, 1, 1, 1);
+            for (int i = 0; i < interactables.getCount(); i++) {
+                MapObject object = interactables.get(i);
+                MapProperties objectProperties = object.getProperties();
+                float objX = (Float) objectProperties.get("x") / 16;
+                float objY = (Float) objectProperties.get("y") / 16;
+                float objW = (Float) objectProperties.get("width") / 16;
+                float objH = (Float) objectProperties.get("height") / 16;
+                debugRenderer.rect(objX, objY, objW, objH);
+            }
+
+            debugRenderer.end();
+        }
 
         // player can see the timer
         batch.setProjectionMatrix(timerCamera.combined);
@@ -369,6 +430,7 @@ public class MapManager implements Screen {
         if (uiStage != null) uiStage.dispose();
         if (uiSkin != null) uiSkin.dispose();
         if (runningSound != null) runningSound.dispose();
+        if (debugRenderer != null) debugRenderer.dispose();
     }
 
     /**
@@ -442,6 +504,8 @@ public class MapManager implements Screen {
     }
 
     public void objectCheck(Vector2 currentPosition) {
+        showInteractionPrompt = false;
+        
         for (int i = 0; i < interactables.getCount(); i++) {
             MapObject Object = interactables.get(i);
 
@@ -452,17 +516,25 @@ public class MapManager implements Screen {
 
             // Checks if the player is inside the object are
             if (isPositionWithinBounds(currentPosition, objectPosition, objectSize)) {
-                batch.begin();
+                showInteractionPrompt = true;
+                interactionPromptPosition.set(currentPosition.x, currentPosition.y + 2);
 
-                batch.draw(interact, currentPosition.x * 20, (currentPosition.y+2) * 20);
-
-                batch.end();
-
-                // I don't know what this does, I think it's event-related?
-                if (Gdx.input.isKeyPressed(Input.Keys.E)) {
+                // Handle interaction when E is pressed
+                if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
                     String change = EM.event(i, player);
-                    if (Float.parseFloat(change) <= 10) {
-                        player.setSpeed((float) Integer.parseInt(change));
+                    
+                    // Only try to parse if change is not null and is a valid number
+                    if (change != null) {
+                        try {
+                            float value = Float.parseFloat(change);
+                            if (value <= 10) {
+                                player.setSpeed(value);
+                            }
+                        } catch (NumberFormatException e) {
+                            // change is not a number (e.g., "Hidden1", "Hidden2", "Win")
+                            // These are already handled by EventManager, so we can ignore them here
+                            System.out.println("Event triggered: " + change);
+                        }
                     }
                 }
             }

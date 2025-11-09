@@ -114,8 +114,8 @@ public class SplashScreen implements Screen {
         TextButton.TextButtonStyle howToPlayStyle = new TextButton.TextButtonStyle(skin.get(TextButton.TextButtonStyle.class));
         howToPlayStyle.fontColor = Color.WHITE;
 
-        // Set the dark green color with 75% opacity
-        Color greenColor = new Color(0.1f, 0.3f, 0.1f, 0.75f); // Dark Green color
+        // Set the dark green colour with 75% opacity
+        Color greenColor = new Color(0.1f, 0.3f, 0.1f, 0.75f);
         Color greenBorderColor = new Color(greenColor.r * 0.75f, greenColor.g * 0.75f, greenColor.b * 0.75f, 0.75f);
 
         Color greenPressed = new Color(greenColor.r * 0.7f, greenColor.g * 0.7f, greenColor.b * 0.7f, 0.75f);
@@ -321,6 +321,8 @@ public class SplashScreen implements Screen {
 
     @Override
     public void hide() {
+        // Clear the input processor when leaving this screen
+        Gdx.input.setInputProcessor(null);
     }
 
     /**
