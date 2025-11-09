@@ -129,8 +129,8 @@ public class MapManager implements Screen {
         barrierTexture = new Texture("Art/Props/Crate_Medium_Closed.png");
 
         // place the key for the barrier on the map
-        keyRect = new Rectangle(3, 30, 2, 2);
-        keyTexture = new Texture("Art/Characters/Main Character/Test Character2.png");
+        keyRect = new Rectangle(2.5f, 30, 3, 3);
+        keyTexture = new Texture("Art/Props/key.png");
 
         // sets up font for text rendering of timer/score
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("ui/arial.ttf"));
@@ -141,7 +141,7 @@ public class MapManager implements Screen {
 
         runningSound = Gdx.audio.newMusic(Gdx.files.internal("Sound/running_sound.mp3"));
         runningSound.setLooping(true);
-        runningSound.setVolume(0.45f);
+        runningSound.setVolume(0.25f);
     }
 
     @Override
