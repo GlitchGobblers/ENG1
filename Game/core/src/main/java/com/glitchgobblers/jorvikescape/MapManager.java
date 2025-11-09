@@ -318,10 +318,6 @@ public class MapManager implements Screen {
                 timer.pauseTimer();
             }
 
-            if (pauseTable != null) {
-                pauseTable.setVisible(false);
-            }
-
             if (endTable != null) {
                 endTable.setVisible(true);
             }
@@ -337,14 +333,16 @@ public class MapManager implements Screen {
     }
 
     @Override
-    public void resize(int i, int i1) {
-        // Update the game viewport to maintain aspect ratio
+    public void resize(int width, int height) {
+        // Update the game viewport to maintain the aspect ratio
         if (gameViewport != null) {
-            gameViewport.update(i, i1, true);
+            gameViewport.update(width, height, true);
         }
+
         if (uiStage != null) {
-            uiStage.getViewport().update(i, i1, true);
+            uiStage.getViewport().update(width, height, true);
         }
+
         if (timerCamera != null) {
             timerCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         }
@@ -372,28 +370,34 @@ public class MapManager implements Screen {
         if (runningSound != null) runningSound.dispose();
     }
 
+    /**
+     * @param x the targeted x coordinate
+     * @param y the targeted y coordinate
+     * @return whether a player will collide with an object if they move to the specified position
+     */
     public boolean isTileSafe(float x, float y) {
         float playerWidth = player.getWidth();
         float playerHeight = player.getHeight();
-        float epsilon = 0.01f; // Prevents snagging on exact tile edges
+        // Prevents snagging on exact tile edges
+        float epsilon = 0.01f;
 
+        boolean bottomLeft = isAreaSafe(x, y);
+        boolean bottomRight = isAreaSafe(x + playerWidth - epsilon, y);
+        boolean topLeft = isAreaSafe(x, y + playerHeight - epsilon);
+        boolean topRight = isAreaSafe(x + playerWidth - epsilon, y + playerHeight - epsilon);
 
-        boolean bottomLeft = IsAreaSafe(x, y);
-        boolean bottomRight = IsAreaSafe(x + playerWidth - epsilon, y);
-        boolean topLeft = IsAreaSafe(x, y + playerHeight - epsilon);
-        boolean topRight = IsAreaSafe(x + playerWidth - epsilon, y + playerHeight - epsilon);
-        //Safe only if ALL corners are on a road tile
+        // Safe only if ALL corners are on a road tile
+        if (!(bottomLeft && bottomRight && topLeft && topRight)) {
+            return false;
+        }
 
-
-        if (!(bottomLeft && bottomRight && topLeft && topRight)) return false;
-
-        // player must not overlaps the barrier if it's active
+        // player must not overlap the barrier if it's active
         if (isBarrierActive && barrierRect != null) {
             Rectangle playerRect = new Rectangle(x, y, playerWidth, playerHeight);
             return !playerRect.overlaps(barrierRect);
+        } else {
+            return true;
         }
-
-        return true;
     }
 
     private boolean playerOnWinTile(float x, float y) {
@@ -409,42 +413,51 @@ public class MapManager implements Screen {
         return bl || br || tl || tr;
     }
 
-    public boolean IsAreaSafe(float x, float y) { // checks whether the tile at the given position is safe to move onto.
+    /**
+     * @param x the targeted x coordinate
+     * @param y the targeted y coordinate
+     * @return whether the tile at the given position is the property given by the layer
+     */
+    private boolean collision(float x, float y, TiledMapTileLayer layer) {
         int col = (int) floor(x);
         int row = (int) floor(y);
 
-        if (roadLayer == null || col < 0 || row < 0 || col >= roadLayer.getWidth() || row >= roadLayer.getHeight()) {
-            return false;
-        } // the statement ensures the player is not moving outside the map boundaries.
-
-        TiledMapTileLayer.Cell cell = roadLayer.getCell(col, row);
-        return cell != null && cell.getTile() != null;
-        //the getcell() will returns null if there is no tile on the roadlayer at this position
-    }
-
-    public boolean isVictoryArea(float x, float y) {
-        int col = (int) floor(x);
-        int row = (int) floor(y);
-
-        if (winLayer == null || col < 0 || row < 0 || col >= winLayer.getWidth() || row >= winLayer.getHeight()) {
+        // ensures the player is not moving outside the map boundaries.
+        if (layer == null || col < 0 || row < 0 || col >= layer.getWidth() || row >= layer.getHeight()) {
             return false;
         }
 
-        TiledMapTileLayer.Cell cell = winLayer.getCell(col, row);
+        TiledMapTileLayer.Cell cell = layer.getCell(col, row);
+        // the getcell() will returns null if there is no tile on the roadlayer at this position
         return cell != null && cell.getTile() != null;
     }
 
-    public void objectCheck(Vector2 CurrentPosition) {
+    public boolean isAreaSafe(float x, float y) {
+        return collision(x, y, roadLayer);
+    }
+
+    public boolean isVictoryArea(float x, float y) {
+        return collision(x, y, winLayer);
+    }
+
+    public void objectCheck(Vector2 currentPosition) {
         for (int i = 0; i < interactables.getCount(); i++) {
             MapObject Object = interactables.get(i);
-            MapProperties ObjectProperties = Object.getProperties();
-            Vector2 ObjectPosition = new Vector2((Float) ObjectProperties.get("x") / 16, (Float) ObjectProperties.get("y") / 16);
-            Vector2 ObjectSize = new Vector2((float) ObjectProperties.get("width") / 16, (float) ObjectProperties.get("height") / 16);
-            if (CurrentPosition.x >= (ObjectPosition.x) && CurrentPosition.x <= ((ObjectPosition.x + ObjectSize.x)) && // Checks if the player is inside the object area
-                CurrentPosition.y >= (ObjectPosition.y) && CurrentPosition.y <= ((ObjectPosition.y + ObjectSize.y))) {
+
+            MapProperties objectProperties = Object.getProperties();
+
+            Vector2 objectPosition = new Vector2((Float) objectProperties.get("x") / 16, (Float) objectProperties.get("y") / 16);
+            Vector2 objectSize = new Vector2((float) objectProperties.get("width") / 16, (float) objectProperties.get("height") / 16);
+
+            // Checks if the player is inside the object are
+            if (isPositionWithinBounds(currentPosition, objectPosition, objectSize)) {
                 batch.begin();
-                batch.draw(interact, CurrentPosition.x*20, (CurrentPosition.y+2 )*20);
+
+                batch.draw(interact, currentPosition.x * 20, (currentPosition.y+2) * 20);
+
                 batch.end();
+
+                // I don't know what this does, I think it's event-related?
                 if (Gdx.input.isKeyPressed(Input.Keys.E)) {
                     String change = EM.event(i);
                     if (Float.parseFloat(change) <= 10) {
@@ -455,74 +468,104 @@ public class MapManager implements Screen {
         }
     }
 
+    /**
+     * Checks if a position is within the bounds of a rectangular area.
+     *
+     * @param position the position to check
+     * @param boundsPosition the top-left corner of the bounds
+     * @param boundsSize the width and height of the bounds
+     * @return true if the position is within the bounds, false otherwise
+     */
+    private boolean isPositionWithinBounds(Vector2 position, Vector2 boundsPosition, Vector2 boundsSize) {
+        return position.x >= boundsPosition.x
+                && position.x <= boundsPosition.x + boundsSize.x
+                && position.y >= boundsPosition.y
+                && position.y <= boundsPosition.y + boundsSize.y;
+    }
+
     public void inputHandler() {
         float delta = Gdx.graphics.getDeltaTime();
         float speed = player.getSpeed();
 
-        Vector2 CurrentPosition = player.getPlayerPosition();
-        float NewPositionX = CurrentPosition.x;
-        float NewPositionY = CurrentPosition.y;
+        Vector2 currentPosition = player.getPlayerPosition();
+        float newPositionX = currentPosition.x;
+        float newPositionY = currentPosition.y;
 
-        // Calculate the New movements based on input
-        boolean right = Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.D);
-        boolean left = Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A);
-        boolean up = Gdx.input.isKeyPressed(Input.Keys.UP) || Gdx.input.isKeyPressed(Input.Keys.W);
-        boolean down = Gdx.input.isKeyPressed(Input.Keys.DOWN) || Gdx.input.isKeyPressed(Input.Keys.S);
-
-        if (right) { NewPositionX += speed * delta; }
-        if (left) { NewPositionX -= speed * delta; }
-        if (up) { NewPositionY += speed * delta; }
-        if (down) { NewPositionY -= speed * delta; }
-
-        Vector2 p = player.getPlayerPosition();
-        if (playerOnWinTile(p.x, p.y)) {
-            gameOver = true;
-            if (pauseTable != null) pauseTable.setVisible(false);
-            if (endTable != null) endTable.setVisible(false);   // hide fail table if it exists
-            if (passTable != null) passTable.setVisible(true);  // SHOW the pass table
-            if (timer != null && timer.getRunning()) timer.pauseTimer();
-            Gdx.input.setInputProcessor(uiStage);
-        }
-
-        // collisions check by Separating axes
-        // check x-axes
-        if (isTileSafe(NewPositionX, CurrentPosition.y)) {
-            player.move(NewPositionX, CurrentPosition.y);
-        } else {
-            NewPositionX = CurrentPosition.x; // use current x if move failed
-        }
-
-
-        //check y-axes
-        if (isTileSafe(CurrentPosition.x, NewPositionY)) {
-            player.move(CurrentPosition.x, NewPositionY);
-        } else {
-            NewPositionX = CurrentPosition.x; // use current x if move failed
-        }
+        boolean goingRight = Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.D);
+        boolean goingLeft = Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A);
+        boolean goingUp = Gdx.input.isKeyPressed(Input.Keys.UP) || Gdx.input.isKeyPressed(Input.Keys.W);
+        boolean goingDown = Gdx.input.isKeyPressed(Input.Keys.DOWN) || Gdx.input.isKeyPressed(Input.Keys.S);
 
         // Update player animation state based on input
-        boolean moving = right || left || up || down;
+        boolean moving = goingRight || goingLeft || goingUp || goingDown;
+
         // Running sound effect control
         if (moving && !runningSound.isPlaying()) {
             runningSound.play();
         } else if (!moving && runningSound.isPlaying()) {
             runningSound.pause();
         }
-        Player.Direction dir = null;
-        if (right) dir = Player.Direction.RIGHT;
-        else if (left) dir = Player.Direction.LEFT;
-        else if (up) dir = Player.Direction.UP;
-        else if (down) dir = Player.Direction.DOWN;
-        player.setAnimationState(moving, dir);
-        Rectangle playerRect = new Rectangle(CurrentPosition.x, CurrentPosition.y, player.getWidth(), player.getHeight());
 
-        if (iskeyActive && playerRect.overlaps(keyRect)) { //this will if statment will check if the player touches the key if yes it'll remove the barrier
+        Player.Direction dir = null;
+        if (goingRight) {
+            dir = Player.Direction.RIGHT;
+            newPositionX += speed * delta;
+        } else if (goingLeft) {
+            dir = Player.Direction.LEFT;
+            newPositionX -= speed * delta;
+        } else if (goingUp) {
+            dir = Player.Direction.UP;
+            newPositionY += speed * delta;
+        } else if (goingDown) {
+            dir = Player.Direction.DOWN;
+            newPositionY -= speed * delta;
+        }
+
+        Vector2 p = player.getPlayerPosition();
+        if (playerOnWinTile(p.x, p.y)) {
+            gameOver = true;
+
+            if (pauseTable != null) {
+                pauseTable.setVisible(false);
+            }
+
+            if (endTable != null) {
+                endTable.setVisible(false);
+            }
+
+            if (timer != null && timer.getRunning()) {
+                timer.pauseTimer();
+            }
+
+            // show the win screen
+            if (passTable != null) {
+                passTable.setVisible(true);
+            }
+
+            Gdx.input.setInputProcessor(uiStage);
+        }
+
+        // check x-axes
+        if (isTileSafe(newPositionX, currentPosition.y)) {
+            player.move(newPositionX, currentPosition.y);
+        }
+
+        //check y-axes
+        if (isTileSafe(currentPosition.x, newPositionY)) {
+            player.move(currentPosition.x, newPositionY);
+        }
+
+        player.setAnimationState(moving, dir);
+        Rectangle playerRect = new Rectangle(currentPosition.x, currentPosition.y, player.getWidth(), player.getHeight());
+
+        // removes the barrier once the player touches the key
+        if (iskeyActive && playerRect.overlaps(keyRect)) {
             iskeyActive = false;
             isBarrierActive = false;
             eventCount++;
             System.out.println("the key is been collected"+ eventCount);
         }
 
-        objectCheck(CurrentPosition);
+        objectCheck(currentPosition);
     }
 }
