@@ -15,7 +15,7 @@ public class Main extends Game {
             // create background music with mp3 from assets
             backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("Sound/background_music.mp3"));
             backgroundMusic.setLooping(true);
-            backgroundMusic.setVolume(0.2f); // Volume: 20%
+            backgroundMusic.setVolume(0.05f); // Volume: 5%
             backgroundMusic.play();
 
             // opens the game to the splash screen
