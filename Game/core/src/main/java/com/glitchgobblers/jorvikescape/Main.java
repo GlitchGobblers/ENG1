@@ -1,32 +1,24 @@
-package io.github.some_example_name;
+package com.glitchgobblers.jorvikescape;
 
-import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.audio.Music;
 
 
-
-// Use to load and start the game music and ui assets
-
-/** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
+/** Used to load and start the game, as well as the background music. */
 public class Main extends Game {
-    private SpriteBatch batch;
-    private Texture image;
     private Music backgroundMusic;
 
     @Override
     public void create() {
         try {
-
+            // create background music with mp3 from assets
             backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("Sound/background_music.mp3"));
             backgroundMusic.setLooping(true);
             backgroundMusic.setVolume(0.2f); // Volume: 20%
             backgroundMusic.play();
 
+            // opens the game to the splash screen
             setScreen(new SplashScreen(this));
         } catch (Exception e) {
             // This will print the actual game-crashing error to the console
@@ -39,6 +31,8 @@ public class Main extends Game {
     @Override
     public void dispose() {
         super.dispose();
+
+        // also disposes of the background music
         if (backgroundMusic != null) {
             backgroundMusic.dispose();
         }
