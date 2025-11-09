@@ -36,62 +36,61 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.math.Rectangle;
 
 
-//Main game class, will manage the camera and will store information about the map
-
+/**
+ * Main game class; manages the camera and stores information about the map
+ */
 public class MapManager implements Screen {
-
-    private Game game;
-    private String mapFilePath;
-    private OrthogonalTiledMapRenderer renderer;
-    private Player player;
-    private OrthographicCamera camera;
-    private FitViewport gameViewport;
+    private final Game game;
+    private final String mapFilePath;
+    private final OrthogonalTiledMapRenderer renderer;
+    private final Player player;
+    private final OrthographicCamera camera;
+    private final FitViewport gameViewport;
     private OrthographicCamera timerCamera;
-    private TiledMapTileLayer roadLayer;
-    private TiledMapTileLayer winLayer;
-    private SpriteBatch batch;
-    private MapObjects interactables;
-    private EventManager EM;
+    private final TiledMapTileLayer roadLayer;
+    private final TiledMapTileLayer winLayer;
+    private final SpriteBatch batch;
+    private final MapObjects interactables;
+    private final EventManager EM;
     private Timer timer;
     private final BitmapFont font;
     private GlyphLayout layout;
-    private Texture interact;
-    private int score = 0;
-    private Music runningSound;
+    private final Texture interact;
+    private final Music runningSound;
 
     // Pause state/UI
     private boolean paused = false;
     private boolean gameOver = false;
+
     private Stage uiStage;
     private Skin uiSkin;
+
     private Table pauseTable;
     private Table endTable;
     private Table passTable;
 
-    private Texture barrierTexture; //the barrier texture
-    private Rectangle barrierRect;
+    private final Texture barrierTexture;
+    private final Rectangle barrierRect;
     private boolean isBarrierActive = true;
-    private Texture keyTexture; // the key barrier texture
-    private Rectangle keyRect;
-    private boolean iskeyActive = true;
-    private int eventCount = 0; //variable to keep counts how many times the key is collected
-    private float unitScale = 1/16f;
-    private SplashScreen.Difficulty difficulty = SplashScreen.Difficulty.EASY; // Default difficulty
 
-    // Temporary code so that it will show whichever tilemap is in the file location, will have to move to render once things are moving
-    public MapManager(Game game, String mapFile) {
-        this(game, mapFile, SplashScreen.Difficulty.EASY);
-    }
-    
+    private final Texture keyTexture;
+    private final Rectangle keyRect;
+    private boolean iskeyActive = true;
+
+    // keeps count of how many times the key has been collected
+    private int eventCount = 0;
+
+    private final SplashScreen.Difficulty difficulty;
+
     public MapManager(Game game, String mapFile, SplashScreen.Difficulty difficulty) {
         this.difficulty = difficulty;
         this.game = game;
         this.mapFilePath = mapFile;
 
-        // this file is a temporary one to see if the renderer is working, it's not our final one
+        // this file is temporary to see if the renderer is working, it's not our final one
         TiledMap map = new TmxMapLoader().load(mapFile);
 
-        // out of all layers this is safe layer which the player can move on it.
+        // this is a safe layer which the player can move on
         this.roadLayer = (TiledMapTileLayer) map.getLayers().get("Road");
 
         // This layer is the layer at which the game is won and ends
@@ -103,27 +102,33 @@ public class MapManager implements Screen {
         // Creates an EventManager which handles getting information about the events on the map
         EM = new EventManager(interactables);
 
+        float unitScale = 1 / 16f;
         this.renderer = new OrthogonalTiledMapRenderer(map, unitScale);
 
         this.camera = new OrthographicCamera();
 
         this.gameViewport = new FitViewport(60, 40, camera);
-        // temporary size to test, once developed slightly the user may be able to select the size of the game window in the main menu
         camera.setToOrtho(false, 60, 40);
         this.renderer.setView(camera);
+
         this.batch = new SpriteBatch();
         player = new Player(new Vector2(9.75f, 3));
-        interact =  new Texture("Art/Interact.png");
-        barrierTexture = new Texture("Art/Props/Crate_Medium_Closed.png");
-        keyTexture = new Texture("Art/Characters/Main Character/Test Character2.png");
-        barrierRect = new Rectangle(37, 21, 2, 2); // place the barrier on the map.
-        keyRect = new Rectangle(10, 23, 2, 2); // place the key for the barrier on the map
+        interact = new Texture("Art/Interact.png");
 
+        // place the barrier on the map
+        barrierRect = new Rectangle(37, 21, 2, 2);
+        barrierTexture = new Texture("Art/Props/Crate_Medium_Closed.png");
+
+        // place the key for the barrier on the map
+        keyRect = new Rectangle(10, 23, 2, 2);
+        keyTexture = new Texture("Art/Characters/Main Character/Test Character2.png");
+
+        // sets up font for text rendering of timer/score
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("ui/arial.ttf"));
         FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
         parameter.size = 48;
         this.font = generator.generateFont(parameter);
-        generator.dispose(); // don't forget to dispose to avoid memory leaks!
+        generator.dispose();
 
         runningSound = Gdx.audio.newMusic(Gdx.files.internal("Sound/running_sound.mp3"));
         runningSound.setLooping(true);
@@ -132,58 +137,55 @@ public class MapManager implements Screen {
 
     @Override
     public void show() {
+        layout = new GlyphLayout();
+
         timer = new Timer(difficulty.getTime());
         timer.startTimer();
 
-        layout = new GlyphLayout();
-
         timerCamera = new OrthographicCamera();
         timerCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
         // UI for pause menu
         uiStage = new Stage(new ScreenViewport());
         uiSkin = new Skin(Gdx.files.internal("ui/uiskin.json"));
-        buildPauseUI();
-        buildFailGUI();
-        buildPassUI();
+
+        pauseTable = buildUI("Pause", Color.BLACK);
+        endTable = buildUI("You ran out of time and failed to escape university!", new Color(0.7f, 0f, 0f, 1f));
+        passTable = buildUI("You solved the puzzles and ESCAPED THE UNI!", new Color(1f, 0.84f, 0f, 1f));
     }
 
-    private void buildPauseUI() {
-        pauseTable = new Table(uiSkin);
-        pauseTable.setFillParent(true);
-        pauseTable.defaults().pad(10);
-        uiStage.addActor(pauseTable);
+    private Table buildUI(String labelTitle, Color titleColour) {
+        Table table = new Table(uiSkin);
+        table.setFillParent(true);
+        table.defaults().pad(10);
+        uiStage.addActor(table);
 
-        Label title = new Label("Pause", uiSkin);
+        Label title = new Label(labelTitle, uiSkin);
         title.setFontScale(3.6f);
         title.setAlignment(Align.center);
-        TextButton resumeBtn = new TextButton("Resume", uiSkin);
-        resumeBtn.getLabel().setFontScale(3.0f); // 3x larger
-        TextButton restartBtn = new TextButton("Restart", uiSkin);
-        restartBtn.getLabel().setFontScale(3.0f); // 3x larger
-        TextButton quitBtn = new TextButton("Quit", uiSkin);
-        quitBtn.getLabel().setFontScale(3.0f); // 3x larger
+        title.setColor(titleColour);
 
         Table window = new Table(uiSkin);
         window.defaults().pad(20).minWidth(200).minHeight(60); // Larger padding and min sizes for buttons
         window.add(title).center().padBottom(40).row();
-        window.add(resumeBtn).fillX().minHeight(80).row();
-        window.add(restartBtn).fillX().minHeight(80).row();
-        window.add(quitBtn).fillX().minHeight(80);
 
-        pauseTable.add().expand().row();
-        pauseTable.add(window).center();
-        pauseTable.row();
-        pauseTable.add().expand();
+        // only for the pause screen do we have a resume button
+        if (labelTitle.equals("Pause")) {
+            TextButton resumeBtn = new TextButton("Resume", uiSkin);
+            resumeBtn.getLabel().setFontScale(3.0f); // 3x larger
 
-        pauseTable.setVisible(false);
+            window.add(resumeBtn).fillX().minHeight(80).row();
 
-        resumeBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
-            @Override
-            public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
-                togglePause();
-            }
-        });
+            resumeBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
+                @Override
+                public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
+                    togglePause();
+                }
+            });
+        }
 
+        TextButton restartBtn = new TextButton("Restart", uiSkin);
+        restartBtn.getLabel().setFontScale(3.0f); // 3x larger
         restartBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
             @Override
             public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
@@ -191,100 +193,27 @@ public class MapManager implements Screen {
             }
         });
 
+        window.add(restartBtn).fillX().minHeight(80).row();
+
+        TextButton quitBtn = new TextButton("Quit", uiSkin);
+        quitBtn.getLabel().setFontScale(3.0f); // 3x larger
         quitBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
             @Override
             public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
                 Gdx.app.exit(); // Properly exit the application
             }
         });
-    }
 
-    private void buildFailGUI() {
-        endTable = new Table(uiSkin);
-        endTable.setFillParent(true);
-        endTable.defaults().pad(10);
-        uiStage.addActor(endTable);
-
-        Label passTitle = new Label("You ran out of time and failed to escape university!", uiSkin);
-        passTitle.setFontScale(3.6f);
-        passTitle.setAlignment(Align.center);
-        passTitle.setColor(new Color(0.7f, 0f, 0f, 1f));
-
-        TextButton restartBtn = new TextButton("Restart", uiSkin);
-        restartBtn.getLabel().setFontScale(3.0f);
-        TextButton quitBtn = new TextButton("Quit", uiSkin);
-        quitBtn.getLabel().setFontScale(3.0f);
-
-        Table window = new Table(uiSkin);
-        window.defaults().pad(20).minWidth(200).minHeight(60);
-        window.add(passTitle).center().padBottom(40).row();
-        window.add(restartBtn).fillX().minHeight(80).row();
         window.add(quitBtn).fillX().minHeight(80);
 
-        endTable.add().expand().row();
-        endTable.add(window).center();
-        endTable.row();
-        endTable.add().expand();
+        table.add().expand().row();
+        table.add(window).center();
+        table.row();
+        table.add().expand();
 
-        endTable.setVisible(false);
+        table.setVisible(false);
 
-        restartBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
-            @Override
-            public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
-                game.setScreen(new MapManager(game, mapFilePath, difficulty));
-            }
-        });
-
-        quitBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
-            @Override
-            public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
-                Gdx.app.exit();
-            }
-        });
-    }
-
-    private void buildPassUI() {
-        passTable = new Table(uiSkin);
-        passTable.setFillParent(true);
-        passTable.defaults().pad(10);
-        uiStage.addActor(passTable);
-
-        Label passTitle = new Label("You solved the puzzles and ESCAPED THE UNI!", uiSkin);
-        passTitle.setFontScale(3.6f);
-        passTitle.setAlignment(Align.center);
-        passTitle.setColor(new Color(1f, 0.84f, 0f, 1f));
-
-        TextButton restartBtn = new TextButton("Play Again", uiSkin);
-        restartBtn.getLabel().setFontScale(3.0f);
-        TextButton quitBtn = new TextButton("Quit", uiSkin);
-        quitBtn.getLabel().setFontScale(3.0f);
-
-        Table window = new Table(uiSkin);
-        window.defaults().pad(20).minWidth(200).minHeight(60);
-        window.add(passTitle).center().padBottom(40).row();
-        window.add(restartBtn).fillX().minHeight(80).row();
-        window.add(quitBtn).fillX().minHeight(80);
-
-        passTable.add().expand().row();
-        passTable.add(window).center();
-        passTable.row();
-        passTable.add().expand();
-
-        passTable.setVisible(false);
-
-        restartBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
-            @Override
-            public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
-                game.setScreen(new MapManager(game, mapFilePath, difficulty));
-            }
-        });
-
-        quitBtn.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
-            @Override
-            public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
-                Gdx.app.exit();
-            }
-        });
+        return table;
     }
 
     private void togglePause() {
@@ -344,6 +273,7 @@ public class MapManager implements Screen {
         font.draw(batch, timerText, x, y);
         
         // Display score in top left corner
+        int score = 0;
         String scoreText = "Score: " + score;
         layout.setText(font, scoreText);
         float scoreX = 20;
@@ -355,7 +285,7 @@ public class MapManager implements Screen {
         // Trigger game over when timer hits zero
         if (!gameOver && timer.getDuration() <= 0) {
             gameOver = true;
-            if (pauseTable != null) pauseTable.setVisible(false);
+            if (table != null) table.setVisible(false);
             if (endTable != null) endTable.setVisible(true);
             if (timer != null && timer.getRunning()) timer.pauseTimer();
             Gdx.input.setInputProcessor(uiStage);
@@ -422,7 +352,7 @@ public class MapManager implements Screen {
         // player must not overlaps the barrier if it's active
         if (isBarrierActive && barrierRect != null) {
             Rectangle playerRect = new Rectangle(x, y, playerWidth, playerHeight);
-            if (playerRect.overlaps(barrierRect)) return false;
+            return !playerRect.overlaps(barrierRect);
         }
 
         return true;
@@ -509,7 +439,7 @@ public class MapManager implements Screen {
         Vector2 p = player.getPlayerPosition();
         if (playerOnWinTile(p.x, p.y)) {
             gameOver = true;
-            if (pauseTable != null) pauseTable.setVisible(false);
+            if (table != null) table.setVisible(false);
             if (endTable != null) endTable.setVisible(false);   // hide fail table if it exists
             if (passTable != null) passTable.setVisible(true);  // SHOW the pass table
             if (timer != null && timer.getRunning()) timer.pauseTimer();
@@ -556,15 +486,5 @@ public class MapManager implements Screen {
         }
 
         objectCheck(CurrentPosition);
-    }
-
-    /**
-     * Modifies the score by the specified amount.
-     * Can be positive (to increase) or negative (to decrease) the score.
-     * 
-     * @param amount The amount to add to the score (can be positive or negative)
-     */
-    public void modifyScore(int amount) {
-        score += amount;
     }
 }
