@@ -46,7 +46,7 @@ public class Timer {
         return running;
     }
 
-    public int getDuration() {
+    private int getDuration() {
         return duration;
     }
 
@@ -62,11 +62,15 @@ public class Timer {
         return this.elapsed + (int) (TimeUtils.timeSinceMillis(start) / 1000);
     }
 
+    public int getTimeLeft() {
+        return getDuration() - getElapsed();
+    }
+
     /**
      * @return a string to display in format MM:SS
      */
     public String displayTimer() {
-        int currentSeconds = getDuration() - getElapsed();
+        int currentSeconds = getTimeLeft();
         if (currentSeconds < 0) {
             currentSeconds = 0;
         }

@@ -311,11 +311,21 @@ public class MapManager implements Screen {
         batch.end();
 
         // Trigger game over when timer hits zero
-        if (!gameOver && timer.getDuration() <= 0) {
+        if (!gameOver && timer.getTimeLeft() <= 0) {
             gameOver = true;
-            if (pauseTable != null) pauseTable.setVisible(false);
-            if (endTable != null) endTable.setVisible(true);
-            if (timer.getRunning()) timer.pauseTimer();
+
+            if (timer.getRunning()) {
+                timer.pauseTimer();
+            }
+
+            if (pauseTable != null) {
+                pauseTable.setVisible(false);
+            }
+
+            if (endTable != null) {
+                endTable.setVisible(true);
+            }
+
             Gdx.input.setInputProcessor(uiStage);
         }
 
