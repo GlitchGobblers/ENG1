@@ -7,25 +7,26 @@ import com.badlogic.gdx.maps.MapProperties;
 import java.util.Objects;
 
 public class EventManager {
-    MapObjects Interactables;
+    MapObjects interactables;
+
     public EventManager(MapObjects Interactables) {
-        this.Interactables = Interactables;
+        this.interactables = Interactables;
     }
+
     public String event(int Index){
-        MapObject Event = Interactables.get(Index);
+        MapObject Event = interactables.get(Index);
         MapProperties EventProperties = Event.getProperties();
+
         if (EventProperties.get("Map") != null) {
             return (String) EventProperties.get("Map");
         }
+
         if (EventProperties.get("Event") != null){
-            if (Objects.equals((String) EventProperties.get("Event"), "StatChange")){
-                return (String)EventProperties.get("StatChange");
+            if (Objects.equals(EventProperties.get("Event"), "StatChange")) {
+                return (String) EventProperties.get("StatChange");
             }
-            //uncomment when victory screen is implemented
-            //if(Objects.equals((String) EventProperties.get("Event"),  "Win")){
-                //call victory screen
-            //}
         }
+
         return null;
     }
 }
