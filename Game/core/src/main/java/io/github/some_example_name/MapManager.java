@@ -35,6 +35,8 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 import com.badlogic.gdx.math.Rectangle;
 
+import java.util.Objects;
+
 
 //Main game class, will manage the camera and will store information about the map
 
@@ -102,7 +104,7 @@ public class MapManager implements Screen {
         interactables = map.getLayers().get("Interactables").getObjects();
 
         // Creates an EventManager which handles getting information about the events on the map
-        EM = new EventManager(interactables);
+        EM = new EventManager(interactables, map.getLayers().get("Barriers").getObjects());
 
         this.renderer = new OrthogonalTiledMapRenderer(map, unitScale);
 
@@ -419,27 +421,16 @@ public class MapManager implements Screen {
 
 
         if (!(bottomLeft && bottomRight && topLeft && topRight)) return false;
-
+        Rectangle playerRect = new Rectangle(x, y, playerWidth, playerHeight);
         // player must not overlaps the barrier if it's active
         if (isBarrierActive && barrierRect != null) {
-            Rectangle playerRect = new Rectangle(x, y, playerWidth, playerHeight);
             if (playerRect.overlaps(barrierRect)) return false;
+        }
+        if (EM.getBarriers()){
+            if(playerRect.overlaps(EM.getBarrierProperties(0))) return false;
         }
 
         return true;
-    }
-
-    private boolean playerOnWinTile(float x, float y) {
-        float w = player.getWidth();
-        float h = player.getHeight();
-        float eps = 0.01f;
-
-        boolean bl = isVictoryArea(x, y);
-        boolean br = isVictoryArea(x + w - eps, y);
-        boolean tl = isVictoryArea(x, y + h - eps);
-        boolean tr = isVictoryArea(x + w - eps, y + h - eps);
-
-        return bl || br || tl || tr;
     }
 
     public boolean IsAreaSafe(float x, float y) { // checks whether the tile at the given position is safe to move onto.
@@ -453,18 +444,6 @@ public class MapManager implements Screen {
         TiledMapTileLayer.Cell cell = roadLayer.getCell(col, row);
         return cell != null && cell.getTile() != null;
         //the getcell() will returns null if there is no tile on the roadlayer at this position
-    }
-
-    public boolean isVictoryArea(float x, float y) {
-        int col = (int) floor(x);
-        int row = (int) floor(y);
-
-        if (winLayer == null || col < 0 || row < 0 || col >= winLayer.getWidth() || row >= winLayer.getHeight()) {
-            return false;
-        }
-
-        TiledMapTileLayer.Cell cell = winLayer.getCell(col, row);
-        return cell != null && cell.getTile() != null;
     }
 
     public void objectCheck(Vector2 CurrentPosition) {
@@ -486,6 +465,14 @@ public class MapManager implements Screen {
                 }
                 if (Gdx.input.isKeyPressed(Input.Keys.E)) {
                     String change = EM.event(i, player);
+                    if (Objects.equals(change, "Win")){
+                        gameOver = true;
+                        if (pauseTable != null) pauseTable.setVisible(false);
+                        if (endTable != null) endTable.setVisible(false);   // hide fail table if it exists
+                        if (passTable != null) passTable.setVisible(true);  // SHOW the pass table
+                        if (timer != null && timer.getRunning()) timer.pauseTimer();
+                        Gdx.input.setInputProcessor(uiStage);
+                    }
                     }
                 }
             }
@@ -510,15 +497,6 @@ public class MapManager implements Screen {
         if (up) { NewPositionY += speed * delta; }
         if (down) { NewPositionY -= speed * delta; }
 
-        Vector2 p = player.getPlayerPosition();
-        if (playerOnWinTile(p.x, p.y)) {
-            gameOver = true;
-            if (pauseTable != null) pauseTable.setVisible(false);
-            if (endTable != null) endTable.setVisible(false);   // hide fail table if it exists
-            if (passTable != null) passTable.setVisible(true);  // SHOW the pass table
-            if (timer != null && timer.getRunning()) timer.pauseTimer();
-            Gdx.input.setInputProcessor(uiStage);
-        }
 
         // collisions check by Separating axes
         // check x-axes
