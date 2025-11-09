@@ -285,7 +285,7 @@ public class MapManager implements Screen {
         // Trigger game over when timer hits zero
         if (!gameOver && timer.getDuration() <= 0) {
             gameOver = true;
-            if (table != null) table.setVisible(false);
+            if (pauseTable != null) pauseTable.setVisible(false);
             if (endTable != null) endTable.setVisible(true);
             if (timer != null && timer.getRunning()) timer.pauseTimer();
             Gdx.input.setInputProcessor(uiStage);
@@ -439,7 +439,7 @@ public class MapManager implements Screen {
         Vector2 p = player.getPlayerPosition();
         if (playerOnWinTile(p.x, p.y)) {
             gameOver = true;
-            if (table != null) table.setVisible(false);
+            if (pauseTable != null) pauseTable.setVisible(false);
             if (endTable != null) endTable.setVisible(false);   // hide fail table if it exists
             if (passTable != null) passTable.setVisible(true);  // SHOW the pass table
             if (timer != null && timer.getRunning()) timer.pauseTimer();
