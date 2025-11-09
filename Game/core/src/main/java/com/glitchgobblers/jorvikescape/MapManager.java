@@ -41,7 +41,6 @@ import com.badlogic.gdx.math.Rectangle;
  */
 public class MapManager implements Screen {
     private final Game game;
-    private final String mapFilePath;
     private final OrthogonalTiledMapRenderer renderer;
     private final Player player;
     private final OrthographicCamera camera;
@@ -85,7 +84,6 @@ public class MapManager implements Screen {
     public MapManager(Game game, String mapFile, SplashScreen.Difficulty difficulty) {
         this.difficulty = difficulty;
         this.game = game;
-        this.mapFilePath = mapFile;
 
         // this file is temporary to see if the renderer is working, it's not our final one
         TiledMap map = new TmxMapLoader().load(mapFile);
@@ -235,7 +233,7 @@ public class MapManager implements Screen {
         } else {
             // assuming the timer exists, start it
             if (timer != null) {
-                timer.startTimer();
+                timer.resumeTimer();
             }
 
             Gdx.input.setInputProcessor(null);
@@ -268,33 +266,46 @@ public class MapManager implements Screen {
             inputHandler();
             player.update(Gdx.graphics.getDeltaTime());
         }
-        batch.setProjectionMatrix(camera.combined);// this ensures that player sprite use the same world units as the map.
+
+        // this ensures that player sprite uses the same world units as the map
+        batch.setProjectionMatrix(camera.combined);
+
         batch.begin();
         player.draw(batch);
-        if (isBarrierActive && barrierRect != null && barrierTexture != null) { //draw the barrier only when the active states is true and it's not null
+
+        // draw the barrier only when it's active and not null
+        if (isBarrierActive && (barrierRect != null) && (barrierTexture != null)) {
             batch.draw(barrierTexture, barrierRect.x, barrierRect.y, barrierRect.width, barrierRect.height);
         }
-        if (iskeyActive && keyTexture != null) {// draw the key that will help the player to pass the barrier
+
+        // draw the key that will help the player to pass the barrier
+        if (iskeyActive && keyTexture != null) {
             batch.draw(keyTexture, keyRect.x, keyRect.y, keyRect.width, keyRect.height);
         }
+
         batch.end();
 
-        batch.setProjectionMatrix(timerCamera.combined); // player can see timer
+        // player can see the timer
+        batch.setProjectionMatrix(timerCamera.combined);
+
         batch.begin();
         String timerText = timer.displayTimer();
         layout.setText(font, timerText);
-        // appears in top right corner
+
+        // appears in the top right corner
         float x = Gdx.graphics.getWidth() - layout.width - 20;
         float y = Gdx.graphics.getHeight() - 20;
         font.setColor(Color.BLACK);
         font.draw(batch, timerText, x, y);
         
-        // Display score in top left corner
+        // Display score in the top left corner
         int score = 0;
         String scoreText = "Score: " + score;
         layout.setText(font, scoreText);
+
         float scoreX = 20;
         float scoreY = Gdx.graphics.getHeight() - 20;
+
         font.setColor(new Color(0.4f, 0.0f, 0.4f, 1.0f)); // Dark purple
         font.draw(batch, scoreText, scoreX, scoreY);
         batch.end();
@@ -304,7 +315,7 @@ public class MapManager implements Screen {
             gameOver = true;
             if (pauseTable != null) pauseTable.setVisible(false);
             if (endTable != null) endTable.setVisible(true);
-            if (timer != null && timer.getRunning()) timer.pauseTimer();
+            if (timer.getRunning()) timer.pauseTimer();
             Gdx.input.setInputProcessor(uiStage);
         }
 

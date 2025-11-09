@@ -7,7 +7,7 @@ import com.badlogic.gdx.utils.TimeUtils;
  * A simple timer for ensuring the player doesn't take too long.
  */
 public class Timer {
-    private int duration;
+    private final int duration;
     private int elapsed;
     private Boolean running;
     private long start;
@@ -66,7 +66,7 @@ public class Timer {
      * @return a string to display in format MM:SS
      */
     public String displayTimer() {
-        int currentSeconds = getDuration();
+        int currentSeconds = getDuration() - getElapsed();
         if (currentSeconds < 0) {
             currentSeconds = 0;
         }
