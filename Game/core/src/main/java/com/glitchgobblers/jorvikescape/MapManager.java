@@ -121,7 +121,7 @@ public class MapManager implements Screen {
         this.renderer.setView(camera);
 
         this.batch = new SpriteBatch();
-        player = new Player(new Vector2(9.75f, 3), unitScale);
+        player = new Player(new Vector2(9.75f, 2), unitScale);
         interact = new Texture("Art/Interact.png");
 
         // place the barrier on the map
