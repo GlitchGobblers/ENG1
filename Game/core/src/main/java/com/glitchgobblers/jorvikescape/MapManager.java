@@ -460,18 +460,22 @@ public class MapManager implements Screen {
             return false;
         }
 
-        // player must not overlap the barrier if it's active
         Rectangle playerRect = new Rectangle(x, y, playerWidth, playerHeight);
-        if (isBarrierActive && barrierRect != null) {
-            return !playerRect.overlaps(barrierRect);
+
+        // Check the hardcoded barrier related to the key
+        if (isBarrierActive && barrierRect != null && playerRect.overlaps(barrierRect)) {
+            return false;
         }
-        for (int i = 0; i<EM.barriers.getCount(); i++){
-            if (playerRect.overlaps(EM.getBarrierProperties(i)) && EM.isBarrier(i))  {
+
+        // Check for event-driven barriers (like the collapsing bridge)
+        for (int i = 0; i < EM.barriers.getCount(); i++) {
+            if (EM.isBarrier(i) && playerRect.overlaps(EM.getBarrierProperties(i))) {
                 return false;
             }
         }
-        return true;
 
+        // If no collisions found, the tile is safe
+        return true;
     }
 
     private boolean playerOnWinTile(float x, float y) {
